@@ -1,0 +1,29 @@
+[
+    {
+        "_key": "0d8025fa9f30",
+        "_type": "block",
+        "children": [
+            {
+                "_key": "0d8025fa9f300",
+                "_type": "span",
+                "marks": [],
+                "text": "Jeg er "
+            },
+            {
+                "_key": "0d8025fa9f301",
+                "_type": "span",
+                "marks": [
+                    "strong"
+                ],
+                "text": "kul"
+            },
+            {
+                "_key": "0d8025fa9f302",
+                "_type": "span",
+                "marks": [],
+                "text": "!"
+            }
+        ],
+        "style": "normal"
+    }
+]
