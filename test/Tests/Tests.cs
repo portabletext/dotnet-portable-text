@@ -5,11 +5,18 @@ using FluentAssertions;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text.Json;
-using Snapshooter.Xunit;
 using Xunit.Abstractions;
+using System.Collections.Generic;
+using Snapshooter.Xunit;
 
 namespace Tests
 {
+    public class YoutubeEmbed : PortableTextBlock
+    {
+        public string Title { get; set; }
+        public string Url { get; set; }
+    }
+
     public class Test
     {
         private readonly ITestOutputHelper output;
@@ -20,99 +27,17 @@ namespace Tests
         }
 
         [Fact]
-        public void HandlesNullObjects()
+        public void HandlesNull()
         {
-            var result = BlockContentToHtml.Render((PortableTextBlock[])null);
+            var result = BlockContentToHtml.Render(null);
             result.Should().BeNull();
         }
 
         [Fact]
-        public void HandlesNullStrings()
+        public void AcceptsEmptyJson()
         {
-            var result = BlockContentToHtml.Render((string)null);
+            var result = BlockContentToHtml.Render(string.Empty);
             result.Should().BeNull();
-        }
-
-        [Fact]
-        public void AcceptsEmptyArray()
-        {
-            var result = BlockContentToHtml.Render(new PortableTextBlock[]{});
-
-            result.Should().BeNull();
-        }
-
-        [Fact]
-        public void GivenOneSimpleArrayElementOfTypeBlock()
-        {
-            var result = BlockContentToHtml.Render(new PortableTextBlock[]
-            {
-                new PortableTextBlock
-                {
-                    Type = "block",
-                    Children = new PortableTextChild[]
-                    {
-                        new PortableTextChild
-                        {
-                            Type = "span",
-                            Text = "test"
-                        }
-                    },
-                    Style = "normal"
-                }
-            });
-
-            result.Should().Be("<p>test</p>");
-        }
-
-        [Fact]
-        public void GivenMultipleSimpleArrayElementOfTypeBlock_ShouldCombineText()
-        {
-            var result = BlockContentToHtml.Render(new PortableTextBlock[]
-            {
-                new PortableTextBlock
-                {
-                    Type = "block",
-                    Children = new PortableTextChild[]
-                    {
-                        new PortableTextChild
-                        {
-                            Type = "span",
-                            Text = "test "
-                        },
-                        new PortableTextChild
-                        {
-                            Type = "span",
-                            Text = "test2"
-                        }
-                    },
-                    Style = "normal"
-                }
-            });
-
-            result.Should().Be("<p>test test2</p>");
-        }
-
-        [Fact]
-        public void ConvertsSlashNToBr()
-        {
-            var result = BlockContentToHtml.Render(new PortableTextBlock[]
-            {
-                new PortableTextBlock
-                {
-                    Type = "block",
-                    Children = new PortableTextChild[]
-                    {
-                        new PortableTextChild
-                        {
-                            Type = "span",
-                            Text = "test\ntest2"
-                        }
-                    },
-                    Style = "normal"
-                }
-            });
-
-            result.Should().Be("<p>test<br>test2</p>");
         }
 
         [Fact]
@@ -132,15 +57,76 @@ namespace Tests
         }
 
         [Fact]
+        public void GivenOneSimpleArrayElementOfTypeBlock()
+        {
+            var result = BlockContentToHtml.Render(@"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""test""
+            }
+        ],
+        ""style"": ""normal""
+    }
+]
+");
+                
+            result.Should().Be("<p>test</p>");
+        }
+
+        [Fact]
+        public void GivenMultipleSimpleArrayElementOfTypeBlock_ShouldCombineText()
+        {
+            var result = BlockContentToHtml.Render(@"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""test""
+            },
+            {
+                ""_type"": ""span"",
+                ""text"": ""test2""
+            }
+        ],
+        ""style"": ""normal""
+    }
+]
+");
+
+            result.Should().Be("<p>testtest2</p>");
+        }
+
+        [Fact]
+        public void ConvertsSlashNToBr()
+        {
+            var result = BlockContentToHtml.Render(@"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""test\ntest2""
+            }
+        ],
+        ""style"": ""normal""
+    }
+]
+");
+
+            result.Should().Be("<p>test<br>test2</p>");
+        }
+
+        [Fact]
         public void HandlesSimpleJson()
         {
-            var serializeOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true
-            };
             var json = File.ReadAllText("../../../data/simple.json");
-            var stuff = JsonSerializer.Deserialize<PortableTextBlock[]>(json, serializeOptions);
             var result = BlockContentToHtml.Render(json);
 
             result.Should().Be("<p>Jeg er <strong>kul</strong>!</p>");
@@ -149,30 +135,56 @@ namespace Tests
         [Fact]
         public void HandlesLinks()
         {
-            var serializeOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-            var json = File.ReadAllBytes("../../../data/links.json");
-            var readOnlySpan = new ReadOnlySpan<byte>(json);
-            var stuff = JsonSerializer.Deserialize<PortableTextBlock[]>(readOnlySpan, serializeOptions);
-            var result = BlockContentToHtml.Render(stuff);
+            var json = File.ReadAllText("../../../data/links.json");
+            var result = BlockContentToHtml.Render(json);
 
-            result.Should().Be(@"<p><strong>Spotify -\u003e </strong><strong><a href=""https://open.spotify.com/episode/2ON1aZSJvYieU8Pewz7yUH?si=KARaXtuaQDaOkeyxs0f7OQ"">Lytt her!</a></strong></p>");
+            result.Should().Be(@"<p><strong>Spotify -> </strong><strong><a href=""https://open.spotify.com/episode/2ON1aZSJvYieU8Pewz7yUH?si=KARaXtuaQDaOkeyxs0f7OQ"">Lytt her!</a></strong></p>");
         }
 
-        // [Fact]
-        // public async Task MassiveTest()
-        // {
-        //     BlockContent[] blockContent;
-        //     using (FileStream fs = File.OpenRead("../../../data/bigcontent.json"))
-        //     {
-        //         blockContent = await JsonSerializer.DeserializeAsync<BlockContent[]>(fs);
-        //     }
+        [Fact]
+        public void GivenNoCustomSerializers_AndCustomObjectsArePresent_ShouldNotCrash()
+        {
+            var json = File.ReadAllText("../../../data/customobjects.json");
+            var result = BlockContentToHtml.Render(json);
 
-        //     var result = BlockContentToHtml.Render(blockContent);
-        //     result.Should().Be("dijoajdas");
-        //     Snapshot.Match(result);
-        // }
+            result.Should().Be(null);
+        }
+
+        [Fact]
+        public void GivenCustomSerializers_AndCustomObjectsArePresent()
+        {
+            var json = File.ReadAllText("../../../data/customobjects.json");
+            var result = BlockContentToHtml.Render(json, new PortableTextSerializers
+            {
+                TypeSerializers = new Dictionary<string, TypeSerializer>
+                {
+                    {
+                        "youtubeEmbed", new TypeSerializer
+                        {
+                            Type = typeof(YoutubeEmbed),
+                            Serialize = (block, serializers) =>
+                            {
+                                var typedBlock = block as YoutubeEmbed;
+                                if (typedBlock == null)
+                                {
+                                    return string.Empty;
+                                }
+
+                                return $@"<iframe title=""{typedBlock.Title}"" href=""{typedBlock.Url}""></iframe>";
+                            }
+                        }
+                    }
+                }
+            });
+
+            result.Should().Be(@"<iframe title=""Top 10 goals Jon Dahl Tomasson"" href=""https://youtu.be/8d9vXiGrYck""></iframe>");
+        }
+
+        [Fact]
+        public void MassiveTest()
+        {
+            var result = BlockContentToHtml.Render(File.ReadAllText("../../../data/bigcontent.json"));
+            Snapshot.Match(result);
+        }
     }
 }
