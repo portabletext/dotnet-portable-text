@@ -267,12 +267,12 @@ namespace Sanity
     {
         public PortableTextSerializersCopy()
         {
-            TypeSerializers = new Dictionary<string, Func<object, PortableTextSerializers, string>>();
-            MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string, string)>>();
+            TypeSerializers = new Dictionary<string, Func<JsonElement, PortableTextSerializersCopy, string>>();
+            MarkSerializers = new Dictionary<string, Func<JsonElement, string, (string, string)>>();
             BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>();
         }
-        public Dictionary<string, Func<object, PortableTextSerializers, string>> TypeSerializers { get; set; }
-        public Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string, string)>> MarkSerializers { get; set; }
+        public Dictionary<string, Func<JsonElement, PortableTextSerializersCopy, string>> TypeSerializers { get; set; }
+        public Dictionary<string, Func<JsonElement, string, (string, string)>> MarkSerializers { get; set; }
         public Dictionary<string, Func<IEnumerable<string>, string>> BlockStyleSerializers { get; set; }
     }
 
@@ -288,71 +288,80 @@ namespace Sanity
         {
             return new PortableTextSerializersCopy
             {
-                TypeSerializers = new Dictionary<string, Func<object, PortableTextSerializers, string>>
+                TypeSerializers = new Dictionary<string, Func<JsonElement, PortableTextSerializersCopy, string>>
                 {
                     {
                         "block", (block, serializers) =>
                             {
-                                var typedBlock = block as PortableTextBlock;
-                                if (typedBlock == null)
+                                // You can deserialize here if you want, but it might be slow.
+
+                                var childrenPropertyExists = block.TryGetProperty("children", out var children);
+                                var stylePropertyExists = block.TryGetProperty("style", out var styleElement);
+
+                                if (!childrenPropertyExists || !stylePropertyExists)
                                 {
                                     return string.Empty;
                                 }
-
-                                if (string.IsNullOrWhiteSpace(typedBlock.Style) ||
-                                    !typedBlock.Children.Any())
-                                {
-                                    return string.Empty;
-                                }
-
-                                var children = typedBlock.Children;
 
                                 var blocks = new List<string>();
-                                foreach (var blockChild in children)
+                                foreach (var blockChild in children.EnumerateArray())
                                 {
-                                    if (blockChild.Marks == null || !blockChild.Marks.Any())
+                                    // What about empty text elements?
+                                    var blockChildTextExists = blockChild.TryGetProperty("text", out var textElement);
+                                    var text = textElement.GetString();
+                                    var blockChildMarksExists = blockChild.TryGetProperty("marks", out var marksElement);
+                                    if (!blockChildMarksExists || marksElement.GetArrayLength() == 0)
                                     {
-                                        blocks.Add(blockChild.Text.Replace("\n", "<br>"));
+                                        blocks.Add(text.Replace("\n", "<br>"));
                                     }
                                     else
                                     {
-                                        var tags = blockChild.Marks.Select(mark =>
+                                        var markDefinitionsExists = block.TryGetProperty("markDefs", out var markDefsElement);
+
+                                        var tags = marksElement.EnumerateArray().Select(markElement =>
                                         {
-                                            var defaultSerializer = serializers.MarkSerializers.TryGetValue(mark, out var defaultMarkSerializerExists);
-                                            if (defaultMarkSerializerExists != null)
+                                            var mark = markElement.GetString();
+                                            var defaultMarkSerializerExists = serializers.MarkSerializers.TryGetValue(mark, out var serializeMark);
+                                            if (defaultMarkSerializerExists)
                                             {
-                                                return serializers.MarkSerializers[mark](typedBlock, blockChild, mark);
+                                                return serializeMark(markDefsElement, mark);
                                             }
 
-                                            return serializers.MarkSerializers[typedBlock.MarkDefinitions.First(markDef => markDef.Key == mark).Type](typedBlock, blockChild, mark);
+                                            return serializers.MarkSerializers[markDefsElement.EnumerateArray().First(markDef => markDef.GetProperty("_key").GetString() == mark).GetProperty("_type").GetString()](markDefsElement, mark);
                                         });
                                         var startTags = tags.Select(x => x.Item1);
                                         var endTags = tags.Select(x => x.Item2).Reverse();
 
                                         blocks.AddRange(startTags);
-                                        blocks.Add(blockChild.Text);
+                                        blocks.Add(text);
                                         blocks.AddRange(endTags);
                                     }
                                 }
 
-                                return serializers.BlockStyleSerializers[typedBlock.Style](blocks);
+                                return serializers.BlockStyleSerializers[styleElement.GetString()](blocks);
                             }
                     }
                 },
-                MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string startTag, string endTag)>>
+                MarkSerializers = new Dictionary<string, Func<JsonElement, string, (string startTag, string endTag)>>
                 {
-                    { "strong", (block, blockChild, mark) => ("<strong>", "</strong>") },
-                    { "em", (block, blockChild, mark) => ("<em>", "</em>") },
-                    { "code", (block, blockChild, mark) => ("<code>", "</code>") },
-                    { "underline", (block, blockChild, mark) => (@"<span style=""text-decoration: underline;"">", "</span>") },
-                    { "strike-through", (block, blockChild, mark) => ("<del>", "</del>") },
+                    { "strong", (_, __) => ("<strong>", "</strong>") },
+                    { "em", (_, __) => ("<em>", "</em>") },
+                    { "code", (_, __) => ("<code>", "</code>") },
+                    { "underline", (_, __) => (@"<span style=""text-decoration: underline;"">", "</span>") },
+                    { "strike-through", (_, __) => ("<del>", "</del>") },
 
                     // Not happy with this. Do we really need the block in itself? Maybe implement a more dynamic approach?
                     {
-                        "link", (block, blockChild, mark) =>
+                        "link", (markDefinitions, mark) =>
                         {
-                            var link = block.MarkDefinitions.First(x => x.Key == mark);
-                            return ($"<a href=\"{link.Href}\">", "</a>");
+                            var link = markDefinitions.EnumerateArray().First(x => x.GetProperty("_key").GetString() == mark);
+                            var hrefExists = link.TryGetProperty("href", out var hrefElement);
+                            if (hrefExists)
+                            {
+                                return ($"<a href=\"{hrefElement.GetString()}\">", "</a>");
+                            }
+
+                            return (string.Empty, string.Empty);
                         }
                     }
                 },
@@ -449,11 +458,13 @@ namespace Sanity
                         continue;
                     }
 
-                    var utf8Value = Encoding.UTF8.GetBytes(element.ToString());
-                    var readOnlySpan = new ReadOnlySpan<byte>(utf8Value);
-                    var value = JsonSerializer.Deserialize(readOnlySpan, serializer.Type, jsonSerializerOptions);
+                    var typeSerializer = serializers.TypeSerializers.TryGetValue(type, out var serialize);
+                    if (serialize == null)
+                    {
+                        continue;
+                    }
 
-                    accumulatedHtml.Add(serializer(value, serializers));
+                    accumulatedHtml.Add(serialize(element, serializers));
                 }
 
                 if (!accumulatedHtml.Any())
