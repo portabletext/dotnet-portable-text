@@ -208,12 +208,13 @@ namespace Sanity
                 }
 
                 var accumulatedHtml = new List<string>(documentLength);
-                foreach (JsonElement element in document.RootElement.EnumerateArray())
+                for (int i = 0; i < documentLength; i++)
                 {
+                    var currentElement = document.RootElement[i];
                     JsonElement typeElement;
                     try
                     {
-                        typeElement = element.GetProperty("_type");
+                        typeElement = currentElement.GetProperty("_type");
                     }
                     catch (KeyNotFoundException)
                     {
@@ -233,11 +234,75 @@ namespace Sanity
                         continue;
                     }
 
-                    var utf8Value = Encoding.UTF8.GetBytes(element.ToString());
-                    var readOnlySpan = new ReadOnlySpan<byte>(utf8Value);
-                    var value = JsonSerializer.Deserialize(readOnlySpan, serializer.Type, jsonSerializerOptions);
+                    try
+                    {
+                        JsonElement listItemElement = currentElement.GetProperty("listItem");
+                        var listItem = listItemElement.GetString();
 
-                    accumulatedHtml.Add(serializer.Serialize(value, serializers));
+                        JsonElement levelElement = currentElement.GetProperty("level");
+                        var level = levelElement.GetInt32();
+
+                        var listStuff = new List<string>();
+                        // search for siblings with same listItem and level and loop over them
+                        for (int j = i + 1; j < documentLength - i + 1; j++)
+                        {
+                            i = j;
+                            // TODO: Find function for searching a list until condition?
+                            var siblingElement = document.RootElement[j];
+                            try
+                            {
+                                var siblingListItemElement = siblingElement.GetProperty("listItem");
+                                var siblingListItem = siblingListItemElement.GetString();
+
+                                if (siblingListItem != listItem)
+                                {
+                                    break;
+                                }
+
+                                var siblingLevelElement = siblingElement.GetProperty("level");
+                                var siblingLevel = siblingLevelElement.GetInt32();
+
+                                if (siblingLevel != level)
+                                {
+                                    // TODO: Recursively add nested lists...
+                                    break;
+                                }
+
+                                var siblingListItemValue = JsonSerializer.Deserialize(siblingElement.ToString(), serializer.Type, jsonSerializerOptions);
+                                listStuff.Add($"<li>{serializer.Serialize(siblingListItemValue, serializers)}</li>");
+                            }
+                            catch (KeyNotFoundException)
+                            {
+                                break;
+                            }
+                        }
+
+                        var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, jsonSerializerOptions);
+
+                        switch (listItem)
+                        {
+                            case "number":
+                                {
+                                    accumulatedHtml.Add($"<ol><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ol>");
+                                    break;
+                                }
+                            case "bullet":
+                                {
+                                    accumulatedHtml.Add($"<ul><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ul>");
+                                    break;
+                                }
+                            default:
+                                break;
+                        }
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        //var utf8Value = Encoding.UTF8.GetBytes(currentElement.ToString());
+                        //var readOnlySpan = new ReadOnlySpan<byte>(utf8Value);
+                        var value = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, jsonSerializerOptions);
+
+                        accumulatedHtml.Add(serializer.Serialize(value, serializers));
+                    }
                 }
 
                 if (!accumulatedHtml.Any())
