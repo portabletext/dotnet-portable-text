@@ -236,6 +236,8 @@ namespace Sanity
 
                     try
                     {
+                        // TODO: Refactor into own code branch for handling lists.
+                        //       Make it readable, not performant to begin with (multiple reads of the same value is fine).
                         JsonElement listItemElement = currentElement.GetProperty("listItem");
                         var listItem = listItemElement.GetString();
 
@@ -243,10 +245,10 @@ namespace Sanity
                         var level = levelElement.GetInt32();
 
                         var listStuff = new List<string>();
+                        int siblingCounter = i + 1;
                         // search for siblings with same listItem and level and loop over them
-                        for (int j = i + 1; j < documentLength - i + 1; j++)
+                        for (int j = siblingCounter; j < documentLength - i + 1; j++)
                         {
-                            i = j;
                             // TODO: Find function for searching a list until condition?
                             var siblingElement = document.RootElement[j];
                             try
@@ -268,6 +270,7 @@ namespace Sanity
                                     break;
                                 }
 
+                                siblingCounter++;
                                 var siblingListItemValue = JsonSerializer.Deserialize(siblingElement.ToString(), serializer.Type, jsonSerializerOptions);
                                 listStuff.Add($"<li>{serializer.Serialize(siblingListItemValue, serializers)}</li>");
                             }
@@ -281,14 +284,17 @@ namespace Sanity
 
                         switch (listItem)
                         {
+                            // TODO: Maybe it would be wise to add custom serializers for lists as well?
                             case "number":
                                 {
                                     accumulatedHtml.Add($"<ol><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ol>");
+                                    i = siblingCounter - 1;
                                     break;
                                 }
                             case "bullet":
                                 {
                                     accumulatedHtml.Add($"<ul><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ul>");
+                                    i = siblingCounter - 1;
                                     break;
                                 }
                             default:
