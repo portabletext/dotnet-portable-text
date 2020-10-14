@@ -204,6 +204,12 @@ namespace Sanity
 
             return true;
         }
+
+        private static bool SerializerForTypeExists(string type, PortableTextSerializers serializers)
+        {
+            return serializers.TypeSerializers.TryGetValue(type, out _);
+        }
+
         public static string Render(string json, PortableTextSerializers customSerializers = null)
         {
             if (string.IsNullOrWhiteSpace(json))
@@ -231,18 +237,14 @@ namespace Sanity
                         continue;
                     }
 
-                    var type = typeElement.GetString();
+                    string type = currentElement.GetProperty("_type").GetString();
 
-                    if (string.IsNullOrWhiteSpace(type))
+                    if (!SerializerForTypeExists(type, serializers))
                     {
                         continue;
                     }
 
                     var typeSerializer = serializers.TypeSerializers.TryGetValue(type, out var serializer);
-                    if (serializer == null)
-                    {
-                        continue;
-                    }
 
                     try
                     {
