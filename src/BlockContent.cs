@@ -190,6 +190,20 @@ namespace Sanity
             return serializers;
         }
 
+        private static bool IsElementValid(JsonElement element)
+        {
+            if (!element.TryGetProperty("_type", out JsonElement typeElement))
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(typeElement.GetString()))
+            {
+                return false;
+            }
+
+            return true;
+        }
         public static string Render(string json, PortableTextSerializers customSerializers = null)
         {
             if (string.IsNullOrWhiteSpace(json))
@@ -211,12 +225,8 @@ namespace Sanity
                 for (int i = 0; i < documentLength; i++)
                 {
                     var currentElement = document.RootElement[i];
-                    JsonElement typeElement;
-                    try
-                    {
-                        typeElement = currentElement.GetProperty("_type");
-                    }
-                    catch (KeyNotFoundException)
+
+                    if (!IsElementValid(currentElement))
                     {
                         continue;
                     }
@@ -303,10 +313,7 @@ namespace Sanity
                     }
                     catch (KeyNotFoundException)
                     {
-                        //var utf8Value = Encoding.UTF8.GetBytes(currentElement.ToString());
-                        //var readOnlySpan = new ReadOnlySpan<byte>(utf8Value);
                         var value = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, jsonSerializerOptions);
-
                         accumulatedHtml.Add(serializer.Serialize(value, serializers));
                     }
                 }
