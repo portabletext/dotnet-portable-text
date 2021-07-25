@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Sanity.csproj" />
+    <ProjectReference Include="..\src\Sanity.BlockContent.csproj" />
   </ItemGroup>
 
 </Project>
