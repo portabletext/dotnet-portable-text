@@ -1,3 +1,5 @@
+[![Saasen](https://circleci.com/gh/saasen/dotnet-portable-text.svg?style=svg)](https://circleci.com/gh/saasen/dotnet-portable-text)
+
 Benchmark results when using raw JSON API:
 
 |   Method |           Job |       Runtime |     Mean |     Error |    StdDev | Ratio |
