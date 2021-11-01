@@ -126,7 +126,7 @@ namespace Tests
         [Fact]
         public void HandlesSimpleJson()
         {
-            var json = File.ReadAllText("../../../data/simple.json");
+            var json = ReadTestJsonFile("simple.json");
             var result = BlockContentToHtml.Render(json);
 
             result.Should().Be("<p>Jeg er <strong>kul</strong>!</p>");
@@ -135,7 +135,7 @@ namespace Tests
         [Fact]
         public void HandlesLinks()
         {
-            var json = File.ReadAllText("../../../data/links.json");
+            var json = ReadTestJsonFile("links.json");
             var result = BlockContentToHtml.Render(json);
 
             result.Should().Be(@"<p><strong>Spotify -> </strong><strong><a href=""https://open.spotify.com/episode/2ON1aZSJvYieU8Pewz7yUH?si=KARaXtuaQDaOkeyxs0f7OQ"">Lytt her!</a></strong></p>");
@@ -144,7 +144,7 @@ namespace Tests
         [Fact]
         public void GivenNoCustomSerializers_AndCustomObjectsArePresent_ShouldNotCrash()
         {
-            var json = File.ReadAllText("../../../data/customobjects.json");
+            var json = ReadTestJsonFile("customobjects.json");
             var result = BlockContentToHtml.Render(json);
 
             result.Should().Be(null);
@@ -153,7 +153,7 @@ namespace Tests
         [Fact]
         public void GivenCustomSerializers_AndCustomObjectsArePresent()
         {
-            var json = File.ReadAllText("../../../data/customobjects.json");
+            var json = ReadTestJsonFile("customobjects.json");
             var result = BlockContentToHtml.Render(json, new PortableTextSerializers
             {
                 TypeSerializers = new Dictionary<string, TypeSerializer>
@@ -183,8 +183,13 @@ namespace Tests
         [Fact]
         public void MassiveTest()
         {
-            var result = BlockContentToHtml.Render(File.ReadAllText("../../../data/bigcontent.json"));
+            var result = BlockContentToHtml.Render(ReadTestJsonFile("bigcontent.json"));
             SnapshotExtensions.MatchFormattedHtml(result);
+        }
+
+        private static string ReadTestJsonFile(string filename)
+        {
+            return File.ReadAllText($"../../../data/{filename}");
         }
     }
 
