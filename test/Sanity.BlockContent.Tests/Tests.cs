@@ -184,7 +184,20 @@ namespace Tests
         public void MassiveTest()
         {
             var result = BlockContentToHtml.Render(File.ReadAllText("../../../data/bigcontent.json"));
-            Snapshot.Match(result);
+            SnapshotExtensions.MatchFormattedHtml(result);
+        }
+    }
+
+    public static class SnapshotExtensions
+    {
+        public static void MatchFormattedHtml(string html)
+        {
+            var parser = new AngleSharp.Html.Parser.HtmlParser();
+            using var document = parser.ParseDocument(html);
+            using var sw = new StringWriter();
+            var formatter = new AngleSharp.Html.PrettyMarkupFormatter { Indentation = "  ", NewLine = Environment.NewLine };
+            document.ToHtml(sw, formatter);
+            Snapshot.Match(sw.ToString());
         }
     }
 }
