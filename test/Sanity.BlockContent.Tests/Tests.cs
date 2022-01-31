@@ -179,6 +179,13 @@ namespace Tests
 
             result.Should().Be(@"<iframe title=""Top 10 goals Jon Dahl Tomasson"" href=""https://youtu.be/8d9vXiGrYck""></iframe>");
         }
+        
+        [Fact]
+        public void List()
+        {
+            var result = BlockContentToHtml.Render(ReadTestJsonFile("list.json"));
+            SnapshotExtensions.MatchFormattedHtml(result);
+        }
 
         [Fact]
         public void MassiveTest()
