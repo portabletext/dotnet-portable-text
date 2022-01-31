@@ -2,7 +2,3 @@ bin
 obj
 
 .vs/*
-
-# Cake
-tools/*
-!tools/packages.config
