@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Collections.Generic;
 using System;
-using System.Text;
 
 namespace Sanity
 {
@@ -19,10 +18,8 @@ namespace Sanity
     {
         [JsonPropertyName("_key")]
         public string Key { get; set; }
-
         [JsonPropertyName("_type")]
         public string Type { get; set; }
-
         public string Href { get; set; }
     }
 
@@ -217,115 +214,128 @@ namespace Sanity
                 return null;
             }
 
-            var serializers = MergeTypeSerializers(GetDefaultBlockSerializers(), customSerializers);
-            
-            using (JsonDocument document = JsonDocument.Parse(json))
+            var serializers = MergeTypeSerializers(DefaultBlockSerializers, customSerializers);
+
+            using var document = JsonDocument.Parse(json);
+            var documentLength = document.RootElement.GetArrayLength();
+            if (documentLength == 0)
             {
-                var documentLength = document.RootElement.GetArrayLength();
-                if (documentLength == 0)
+                return null;
+            }
+
+            var accumulatedHtml = new List<string>(documentLength);
+            for (var i = 0; i < documentLength; i++)
+            {
+                var currentElement = document.RootElement[i];
+
+                if (!IsElementValid(currentElement))
                 {
-                    return null;
+                    continue;
                 }
 
-                var accumulatedHtml = new List<string>(documentLength);
-                for (int i = 0; i < documentLength; i++)
+                var type = currentElement.GetProperty("_type").GetString();
+
+                if (!SerializerForTypeExists(type, serializers))
                 {
-                    var currentElement = document.RootElement[i];
+                    // Warn?
+                    continue;
+                }
 
-                    if (!IsElementValid(currentElement))
+                var typeSerializer = serializers.TypeSerializers.TryGetValue(type, out var serializer);
+
+                if (IsElementList(currentElement))
+                {
+                    // Serialize list and return
+                    // TODO: Refactor into own code branch for handling lists.
+                    //       Make it readable, not performant to begin with (multiple reads of the same value is fine).
+                    var listVariant = currentElement.GetProperty("listItem").GetString();
+                    var level = currentElement.GetProperty("level").GetInt32();
+
+                    var listStuff = new List<string>();
+                    int siblingCounter = i + 1;
+                    // search for siblings with same listItem and level and loop over them
+                    for (int j = siblingCounter; j < documentLength - i + 1; j++)
                     {
-                        continue;
-                    }
-
-                    string type = currentElement.GetProperty("_type").GetString();
-
-                    if (!SerializerForTypeExists(type, serializers))
-                    {
-                        continue;
-                    }
-
-                    var typeSerializer = serializers.TypeSerializers.TryGetValue(type, out var serializer);
-
-                    try
-                    {
-                        // TODO: Refactor into own code branch for handling lists.
-                        //       Make it readable, not performant to begin with (multiple reads of the same value is fine).
-                        JsonElement listItemElement = currentElement.GetProperty("listItem");
-                        var listItem = listItemElement.GetString();
-
-                        JsonElement levelElement = currentElement.GetProperty("level");
-                        var level = levelElement.GetInt32();
-
-                        var listStuff = new List<string>();
-                        int siblingCounter = i + 1;
-                        // search for siblings with same listItem and level and loop over them
-                        for (int j = siblingCounter; j < documentLength - i + 1; j++)
+                        if (siblingCounter == documentLength)
                         {
-                            // TODO: Find function for searching a list until condition?
-                            var siblingElement = document.RootElement[j];
-                            try
-                            {
-                                var siblingListItemElement = siblingElement.GetProperty("listItem");
-                                var siblingListItem = siblingListItemElement.GetString();
+                            break;
+                        }
+                        // TODO: Find function for searching a list until condition?
+                        var siblingElement = document.RootElement[j];
+                        try
+                        {
+                            var siblingListItemElement = siblingElement.GetProperty("listItem");
+                            var siblingListItem = siblingListItemElement.GetString();
 
-                                if (siblingListItem != listItem)
-                                {
-                                    break;
-                                }
-
-                                var siblingLevelElement = siblingElement.GetProperty("level");
-                                var siblingLevel = siblingLevelElement.GetInt32();
-
-                                if (siblingLevel != level)
-                                {
-                                    // TODO: Recursively add nested lists...
-                                    break;
-                                }
-
-                                siblingCounter++;
-                                var siblingListItemValue = JsonSerializer.Deserialize(siblingElement.ToString(), serializer.Type, jsonSerializerOptions);
-                                listStuff.Add($"<li>{serializer.Serialize(siblingListItemValue, serializers)}</li>");
-                            }
-                            catch (KeyNotFoundException)
+                            if (siblingListItem != listVariant)
                             {
                                 break;
                             }
-                        }
 
-                        var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, jsonSerializerOptions);
+                            var siblingLevelElement = siblingElement.GetProperty("level");
+                            var siblingLevel = siblingLevelElement.GetInt32();
 
-                        switch (listItem)
-                        {
-                            // TODO: Maybe it would be wise to add custom serializers for lists as well?
-                            case "number":
-                                {
-                                    accumulatedHtml.Add($"<ol><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ol>");
-                                    i = siblingCounter - 1;
-                                    break;
-                                }
-                            case "bullet":
-                                {
-                                    accumulatedHtml.Add($"<ul><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ul>");
-                                    i = siblingCounter - 1;
-                                    break;
-                                }
-                            default:
+                            siblingCounter++;
+                            var siblingListItemValue = JsonSerializer.Deserialize(siblingElement.ToString(), serializer.Type, jsonSerializerOptions);
+                            listStuff.Add($"<li>{serializer.Serialize(siblingListItemValue, serializers)}</li>");
+                            
+                            if (siblingLevel != level)
+                            {
+                                // TODO: Recursively add nested lists...
                                 break;
+                            }
+                        }
+                        catch (KeyNotFoundException)
+                        {
+                            break;
                         }
                     }
-                    catch (KeyNotFoundException)
+                
+                    var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, jsonSerializerOptions);
+                
+                    switch (listVariant)
                     {
-                        var value = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, jsonSerializerOptions);
-                        accumulatedHtml.Add(serializer.Serialize(value, serializers));
+                        // TODO: Maybe it would be wise to add custom serializers for lists as well?
+                        case "number":
+                        {
+                            accumulatedHtml.Add($"<ol><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ol>");
+                            i = siblingCounter - 1;
+                            break;
+                        }
+                        case "bullet":
+                        {
+                            accumulatedHtml.Add($"<ul><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ul>");
+                            i = siblingCounter - 1;
+                            break;
+                        }
                     }
                 }
-
-                if (!accumulatedHtml.Any())
+                else
                 {
-                    return null;
+                    var value = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, jsonSerializerOptions);
+                    accumulatedHtml.Add(serializer.Serialize(value, serializers));
                 }
+            }
 
-                return string.Join("", accumulatedHtml);
+            if (!accumulatedHtml.Any())
+            {
+                return null;
+            }
+
+            return string.Join("", accumulatedHtml);
+        }
+
+        private static bool IsElementList(JsonElement currentElement)
+        {
+            try
+            {
+                currentElement.GetProperty("listItem");
+                currentElement.GetProperty("level");
+                return true;
+            }
+            catch (KeyNotFoundException)
+            {
+                return false;
             }
         }
     }
