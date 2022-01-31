@@ -1,4 +1,15 @@
 bin
 obj
 
+# VS Code
 .vs/*
+
+# Mac
+.DS_Store
+
+
+# Rider
+.idea/*
+
+# Visual Studio
+*.DotSettings.user
