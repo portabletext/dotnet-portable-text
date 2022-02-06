@@ -1,151 +1,105 @@
 ﻿using System.Linq;
-using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Collections.Generic;
 using System;
 
 namespace Sanity;
 
-public class PortableText
-{
-    [JsonPropertyName("_key")]
-    public string Key { get; set; }
-    [JsonPropertyName("_type")]
-    public string Type { get; set; }
-}
-
-public class MarkDefinition
-{
-    [JsonPropertyName("_key")]
-    public string Key { get; set; }
-    [JsonPropertyName("_type")]
-    public string Type { get; set; }
-    public string Href { get; set; }
-}
-
-public class PortableTextBlock : PortableText
-{
-    public PortableTextChild[] Children { get; set; }
-    [JsonPropertyName("markDefs")]
-    public MarkDefinition[] MarkDefinitions { get; set; }
-    public string Style { get; set; }
-}
-
-public class PortableTextChild
-{
-    [JsonPropertyName("_key")]
-    public string Key { get; set; }
-    [JsonPropertyName("_type")]
-    public string Type { get; set; }
-    public string[] Marks { get; set; }
-    public string Text { get; set; }
-}
-
-public class TypeSerializer
-{
-    public Type Type { get; set; }
-    public Func<object, PortableTextSerializers, string> Serialize { get; set; }
-}
-
 public static class BlockContentToHtml
 {
-    private static JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public static PortableTextSerializers DefaultBlockSerializers = GetDefaultBlockSerializers();
-    private static PortableTextSerializers GetDefaultBlockSerializers()
+    private static readonly PortableTextSerializers DefaultBlockSerializers = new()
     {
-        return new PortableTextSerializers
+        TypeSerializers = new Dictionary<string, TypeSerializer>
         {
-            TypeSerializers = new Dictionary<string, TypeSerializer>
             {
+                "block", new TypeSerializer
                 {
-                    "block", new TypeSerializer
+                    Type = typeof(PortableTextBlock),
+                    Serialize = (block, serializers) =>
                     {
-                        Type = typeof(PortableTextBlock),
-                        Serialize = (block, serializers) =>
+                        var typedBlock = block as PortableTextBlock;
+                        if (typedBlock == null)
                         {
-                            var typedBlock = block as PortableTextBlock;
-                            if (typedBlock == null)
-                            {
-                                return string.Empty;
-                            }
-
-                            if (string.IsNullOrWhiteSpace(typedBlock.Style) ||
-                                !typedBlock.Children.Any())
-                            {
-                                return string.Empty;
-                            }
-
-                            var children = typedBlock.Children;
-
-                            var blocks = new List<string>();
-                            foreach (var blockChild in children)
-                            {
-                                if (blockChild.Marks == null || !blockChild.Marks.Any())
-                                {
-                                    blocks.Add(blockChild.Text.Replace("\n", "<br>"));
-                                }
-                                else
-                                {
-                                    var tags = blockChild.Marks.Select(mark =>
-                                    {
-                                        var defaultSerializer = serializers.MarkSerializers.TryGetValue(mark, out var defaultMarkSerializerExists);
-                                        if (defaultMarkSerializerExists != null)
-                                        {
-                                            return serializers.MarkSerializers[mark](typedBlock, blockChild, mark);
-                                        }
-
-                                        return serializers.MarkSerializers[typedBlock.MarkDefinitions.First(markDef => markDef.Key == mark).Type](typedBlock, blockChild, mark);
-                                    });
-                                    var startTags = tags.Select(x => x.Item1);
-                                    var endTags = tags.Select(x => x.Item2).Reverse();
-
-                                    blocks.AddRange(startTags);
-                                    blocks.Add(blockChild.Text);
-                                    blocks.AddRange(endTags);
-                                }
-                            }
-
-                            return serializers.BlockStyleSerializers[typedBlock.Style](blocks);
+                            return string.Empty;
                         }
-                    }
-                }
-            },
-            MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string startTag, string endTag)>>
-            {
-                { "strong", (block, blockChild, mark) => ("<strong>", "</strong>") },
-                { "em", (block, blockChild, mark) => ("<em>", "</em>") },
-                { "code", (block, blockChild, mark) => ("<code>", "</code>") },
-                { "underline", (block, blockChild, mark) => (@"<span style=""text-decoration: underline;"">", "</span>") },
-                { "strike-through", (block, blockChild, mark) => ("<del>", "</del>") },
 
-                // Not happy with this. Do we really need the block in itself? Maybe implement a more dynamic approach?
-                {
-                    "link", (block, blockChild, mark) =>
-                    {
-                        var link = block.MarkDefinitions.First(x => x.Key == mark);
-                        return ($"<a href=\"{link.Href}\">", "</a>");
+                        if (string.IsNullOrWhiteSpace(typedBlock.Style) ||
+                            !typedBlock.Children.Any())
+                        {
+                            return string.Empty;
+                        }
+
+                        var children = typedBlock.Children;
+
+                        var blocks = new List<string>();
+                        foreach (var blockChild in children)
+                        {
+                            if (blockChild.Marks == null || !blockChild.Marks.Any())
+                            {
+                                blocks.Add(blockChild.Text.Replace("\n", "<br>"));
+                            }
+                            else
+                            {
+                                var tags = blockChild.Marks.Select(mark =>
+                                {
+                                    var defaultSerializer = serializers.MarkSerializers.TryGetValue(mark, out var defaultMarkSerializerExists);
+                                    if (defaultMarkSerializerExists != null)
+                                    {
+                                        return serializers.MarkSerializers[mark](typedBlock, blockChild, mark);
+                                    }
+
+                                    return serializers.MarkSerializers[typedBlock.MarkDefinitions.First(markDef => markDef.Key == mark).Type](typedBlock, blockChild, mark);
+                                });
+                                var startTags = tags.Select(x => x.Item1);
+                                var endTags = tags.Select(x => x.Item2).Reverse();
+
+                                blocks.AddRange(startTags);
+                                blocks.Add(blockChild.Text);
+                                blocks.AddRange(endTags);
+                            }
+                        }
+
+                        return serializers.BlockStyleSerializers[typedBlock.Style](blocks);
                     }
                 }
-            },
-            BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>
-            {
-                { "normal", blocks => $"<p>{string.Join(string.Empty, blocks)}</p>" },
-                { "h1", blocks => $"<h1>{string.Join(string.Empty, blocks)}</h1>" },
-                { "h2", blocks => $"<h2>{string.Join(string.Empty, blocks)}</h2>" },
-                { "h3", blocks => $"<h3>{string.Join(string.Empty, blocks)}</h3>" },
-                { "h4", blocks => $"<h4>{string.Join(string.Empty, blocks)}</h4>" },
-                { "h5", blocks => $"<h5>{string.Join(string.Empty, blocks)}</h5>" },
-                { "h6", blocks => $"<h6>{string.Join(string.Empty, blocks)}</h6>" },
-                { "blockquote", blocks => $"<blockquote>{string.Join(string.Empty, blocks)}</blockquote>" }
             }
-        };
-    }
+        },
+        MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string startTag, string endTag)>>
+        {
+            { "strong", (block, blockChild, mark) => ("<strong>", "</strong>") },
+            { "em", (block, blockChild, mark) => ("<em>", "</em>") },
+            { "code", (block, blockChild, mark) => ("<code>", "</code>") },
+            { "underline", (block, blockChild, mark) => (@"<span style=""text-decoration: underline;"">", "</span>") },
+            { "strike-through", (block, blockChild, mark) => ("<del>", "</del>") },
 
-    private static PortableTextSerializers MergeTypeSerializers(PortableTextSerializers defaultSerializers, PortableTextSerializers customSerializers)
+            // Not happy with this. Do we really need the block in itself? Maybe implement a more dynamic approach?
+            {
+                "link", (block, blockChild, mark) =>
+                {
+                    var link = block.MarkDefinitions.First(x => x.Key == mark);
+                    return ($"<a href=\"{link.Href}\">", "</a>");
+                }
+            }
+        },
+        BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>
+        {
+            { "normal", blocks => $"<p>{string.Join(string.Empty, blocks)}</p>" },
+            { "h1", blocks => $"<h1>{string.Join(string.Empty, blocks)}</h1>" },
+            { "h2", blocks => $"<h2>{string.Join(string.Empty, blocks)}</h2>" },
+            { "h3", blocks => $"<h3>{string.Join(string.Empty, blocks)}</h3>" },
+            { "h4", blocks => $"<h4>{string.Join(string.Empty, blocks)}</h4>" },
+            { "h5", blocks => $"<h5>{string.Join(string.Empty, blocks)}</h5>" },
+            { "h6", blocks => $"<h6>{string.Join(string.Empty, blocks)}</h6>" },
+            { "blockquote", blocks => $"<blockquote>{string.Join(string.Empty, blocks)}</blockquote>" }
+        }
+    };
+
+    private static PortableTextSerializers MergeSerializers(PortableTextSerializers defaultSerializers, PortableTextSerializers customSerializers)
     {
         if (customSerializers == null)
         {
@@ -187,7 +141,7 @@ public static class BlockContentToHtml
         return serializers;
     }
 
-    private static bool IsElementValid(JsonElement element)
+    private static bool IsPortableTextElementValid(JsonElement element)
     {
         if (!element.TryGetProperty("_type", out JsonElement typeElement))
         {
@@ -214,7 +168,7 @@ public static class BlockContentToHtml
             return null;
         }
 
-        var serializers = MergeTypeSerializers(DefaultBlockSerializers, customSerializers);
+        var serializers = MergeSerializers(DefaultBlockSerializers, customSerializers);
 
         using var document = JsonDocument.Parse(json);
         var documentLength = document.RootElement.GetArrayLength();
@@ -227,7 +181,7 @@ public static class BlockContentToHtml
         for (var i = 0; i < documentLength; i++)
         {
             var currentElement = document.RootElement[i];
-            if (!IsElementValid(currentElement))
+            if (!IsPortableTextElementValid(currentElement))
             {
                 continue;
             }
@@ -240,7 +194,7 @@ public static class BlockContentToHtml
             }
 
             var serializer = serializers.TypeSerializers[elementType];
-            if (IsElementList(currentElement))
+            if (IsElementPortableTextList(currentElement))
             {
                 accumulatedHtml.Add(SerializeList(document, currentElement, ref i, serializers, serializer));
             }
@@ -276,7 +230,7 @@ public static class BlockContentToHtml
             }
             
             var siblingElement = document.RootElement[siblingIndex];
-            if (!IsElementList(siblingElement))
+            if (!IsElementPortableTextList(siblingElement))
             {
                 break;
             }
@@ -332,7 +286,7 @@ public static class BlockContentToHtml
         return string.Join("", accumulatedHtml);
     }
 
-    private static bool IsElementList(JsonElement currentElement)
+    private static bool IsElementPortableTextList(JsonElement currentElement)
     {
         try
         {
@@ -345,17 +299,4 @@ public static class BlockContentToHtml
             return false;
         }
     }
-}
-
-public class PortableTextSerializers
-{
-    public PortableTextSerializers()
-    {
-        TypeSerializers = new Dictionary<string, TypeSerializer>();
-        MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string, string)>>();
-        BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>();
-    }
-    public Dictionary<string, TypeSerializer> TypeSerializers { get; set; }
-    public Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string, string)>> MarkSerializers { get; set; }
-    public Dictionary<string, Func<IEnumerable<string>, string>> BlockStyleSerializers { get; set; }
 }
