@@ -1,0 +1,66 @@
+[
+  {
+    "_key": "0d8025fa9f30",
+    "_type": "block",
+    "children": [
+      {
+        "_key": "0d8025fa9f300",
+        "_type": "span",
+        "marks": [],
+        "text": "listitem 1-1"
+      }
+    ],
+    "level": 1,
+    "listItem": "bullet",
+    "markDefs": [],
+    "style": "normal"
+  },
+  {
+    "_key": "0d8025fa9f31",
+    "_type": "block",
+    "children": [
+      {
+        "_key": "0d8025fa9f310",
+        "_type": "span",
+        "marks": [],
+        "text": "listitem 2-1"
+      }
+    ],
+    "level": 2,
+    "listItem": "bullet",
+    "markDefs": [],
+    "style": "normal"
+  },
+  {
+    "_key": "0d8025fa9f32",
+    "_type": "block",
+    "children": [
+      {
+        "_key": "0d8025fa9f320",
+        "_type": "span",
+        "marks": [],
+        "text": "listitem 2-2"
+      }
+    ],
+    "level": 2,
+    "listItem": "bullet",
+    "markDefs": [],
+    "style": "normal"
+  },
+  {
+    "_key": "0d8025fa9f33",
+    "_type": "block",
+    "children": [
+      {
+        "_key": "0d8025fa9f330",
+        "_type": "span",
+        "marks": [],
+        "text": "listitem 1-2"
+      }
+    ],
+    "level": 1,
+    "listItem": "bullet",
+    "markDefs": [],
+    "style": "normal"
+  }
+]

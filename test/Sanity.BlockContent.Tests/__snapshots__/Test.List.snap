@@ -22,13 +22,17 @@
         </p>
       </li>
       <li>
-        <p>
-          <strong>Spotify -&gt;
-          </strong>
-          <strong>
-            <a href="https://open.spotify.com/episode/2ON1aZSJvYieU8Pewz7yUH?si=KARaXtuaQDaOkeyxs0f7OQ">Lytt her!</a>
-          </strong>
-        </p>
+        <ul>
+          <li>
+            <p>
+              <strong>Spotify -&gt;
+              </strong>
+              <strong>
+                <a href="https://open.spotify.com/episode/2ON1aZSJvYieU8Pewz7yUH?si=KARaXtuaQDaOkeyxs0f7OQ">Lytt her!</a>
+              </strong>
+            </p>
+          </li>
+        </ul>
       </li>
     </ul>
   </body>

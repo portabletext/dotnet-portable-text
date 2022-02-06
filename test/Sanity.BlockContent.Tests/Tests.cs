@@ -186,6 +186,13 @@ namespace Tests
             var result = BlockContentToHtml.Render(ReadTestJsonFile("list.json"));
             SnapshotExtensions.MatchFormattedHtml(result);
         }
+        
+        [Fact]
+        public void MultipleLevelList()
+        {
+            var result = BlockContentToHtml.Render(ReadTestJsonFile("multiple-level-list.json"));
+            SnapshotExtensions.MatchFormattedHtml(result);
+        }
 
         [Fact]
         public void MassiveTest()
