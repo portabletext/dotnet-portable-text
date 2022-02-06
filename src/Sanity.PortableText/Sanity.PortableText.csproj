@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <RootNamespace>Sanity</RootNamespace>
+    <RootNamespace>PortableText</RootNamespace>
     <LangVersion>default</LangVersion>
+    <AssemblyName>PortableText</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

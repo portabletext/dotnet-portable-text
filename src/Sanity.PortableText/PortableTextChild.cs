@@ -1,12 +1,13 @@
 using System.Text.Json.Serialization;
 
-namespace Sanity;
+namespace PortableText;
 
-public class MarkDefinition
+public class PortableTextChild
 {
     [JsonPropertyName("_key")]
     public string Key { get; set; }
     [JsonPropertyName("_type")]
     public string Type { get; set; }
-    public string Href { get; set; }
+    public string[] Marks { get; set; }
+    public string Text { get; set; }
 }

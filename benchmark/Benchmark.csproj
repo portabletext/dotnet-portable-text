@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>default</LangVersion>
+    <AssemblyName>PortableText.Benchmark</AssemblyName>
+    <RootNamespace>PortableText</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Sanity.BlockContent\Sanity.BlockContent.csproj" />
+    <ProjectReference Include="..\src\Sanity.PortableText\Sanity.PortableText.csproj" />
   </ItemGroup>
 
 </Project>

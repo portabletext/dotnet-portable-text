@@ -1,6 +1,6 @@
 using System;
 
-namespace Sanity;
+namespace PortableText;
 
 public class TypeSerializer
 {

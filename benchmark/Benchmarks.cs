@@ -1,12 +1,12 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using Sanity;
 using System.IO;
 
-namespace Benchmark
+namespace PortableText
 {
     [SimpleJob(RuntimeMoniker.Net472, baseline: true)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp30)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp50)]
     [RPlotExporter]
     public class Benchmarks
     {
@@ -19,6 +19,6 @@ namespace Benchmark
         }
 
         [Benchmark]
-        public string HugeJson() => BlockContentToHtml.Render(json);
+        public string HugeJson() => PortableTextToHtml.Render(json);
     }
 }

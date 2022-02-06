@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Sanity;
+namespace PortableText;
 
 public class PortableTextBlock
 {

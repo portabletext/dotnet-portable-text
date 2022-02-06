@@ -3,9 +3,9 @@ using System.Text.Json;
 using System.Collections.Generic;
 using System;
 
-namespace Sanity;
+namespace PortableText;
 
-public static class BlockContentToHtml
+public static class PortableTextToHtml
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {

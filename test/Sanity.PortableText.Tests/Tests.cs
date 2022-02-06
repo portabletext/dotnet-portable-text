@@ -1,15 +1,12 @@
 ﻿using System;
-using Sanity;
 using Xunit;
 using FluentAssertions;
-using System.Threading.Tasks;
 using System.IO;
-using System.Text.Json;
 using Xunit.Abstractions;
 using System.Collections.Generic;
 using Snapshooter.Xunit;
 
-namespace Tests
+namespace PortableText
 {
     public class YoutubeEmbed : PortableTextBlock
     {
@@ -29,21 +26,21 @@ namespace Tests
         [Fact]
         public void HandlesNull()
         {
-            var result = BlockContentToHtml.Render(null);
+            var result = PortableTextToHtml.Render(null);
             result.Should().BeNull();
         }
 
         [Fact]
         public void AcceptsEmptyJson()
         {
-            var result = BlockContentToHtml.Render(string.Empty);
+            var result = PortableTextToHtml.Render(string.Empty);
             result.Should().BeNull();
         }
 
         [Fact]
         public void HandlesEmptyJsonArray()
         {
-            var result = BlockContentToHtml.Render("[]");
+            var result = PortableTextToHtml.Render("[]");
 
             result.Should().Be(null);
         }
@@ -51,7 +48,7 @@ namespace Tests
         [Fact]
         public void HandlesJsonArrayWithEmptyObject()
         {
-            var result = BlockContentToHtml.Render("[{}]");
+            var result = PortableTextToHtml.Render("[{}]");
 
             result.Should().Be(null);
         }
@@ -59,7 +56,7 @@ namespace Tests
         [Fact]
         public void GivenOneSimpleArrayElementOfTypeBlock()
         {
-            var result = BlockContentToHtml.Render(@"
+            var result = PortableTextToHtml.Render(@"
 [
     {
         ""_type"": ""block"",
@@ -80,7 +77,7 @@ namespace Tests
         [Fact]
         public void GivenMultipleSimpleArrayElementOfTypeBlock_ShouldCombineText()
         {
-            var result = BlockContentToHtml.Render(@"
+            var result = PortableTextToHtml.Render(@"
 [
     {
         ""_type"": ""block"",
@@ -105,7 +102,7 @@ namespace Tests
         [Fact]
         public void ConvertsSlashNToBr()
         {
-            var result = BlockContentToHtml.Render(@"
+            var result = PortableTextToHtml.Render(@"
 [
     {
         ""_type"": ""block"",
@@ -127,7 +124,7 @@ namespace Tests
         public void HandlesSimpleJson()
         {
             var json = ReadTestJsonFile("simple.json");
-            var result = BlockContentToHtml.Render(json);
+            var result = PortableTextToHtml.Render(json);
 
             result.Should().Be("<p>Jeg er <strong>kul</strong>!</p>");
         }
@@ -136,7 +133,7 @@ namespace Tests
         public void HandlesLinks()
         {
             var json = ReadTestJsonFile("links.json");
-            var result = BlockContentToHtml.Render(json);
+            var result = PortableTextToHtml.Render(json);
 
             result.Should().Be(@"<p><strong>Spotify -> </strong><strong><a href=""https://open.spotify.com/episode/2ON1aZSJvYieU8Pewz7yUH?si=KARaXtuaQDaOkeyxs0f7OQ"">Lytt her!</a></strong></p>");
         }
@@ -145,7 +142,7 @@ namespace Tests
         public void GivenNoCustomSerializers_AndCustomObjectsArePresent_ShouldNotCrash()
         {
             var json = ReadTestJsonFile("customobjects.json");
-            var result = BlockContentToHtml.Render(json);
+            var result = PortableTextToHtml.Render(json);
 
             result.Should().Be(null);
         }
@@ -154,7 +151,7 @@ namespace Tests
         public void GivenCustomSerializers_AndCustomObjectsArePresent()
         {
             var json = ReadTestJsonFile("customobjects.json");
-            var result = BlockContentToHtml.Render(json, new PortableTextSerializers
+            var result = PortableTextToHtml.Render(json, new PortableTextSerializers
             {
                 TypeSerializers = new Dictionary<string, TypeSerializer>
                 {
@@ -183,21 +180,21 @@ namespace Tests
         [Fact]
         public void List()
         {
-            var result = BlockContentToHtml.Render(ReadTestJsonFile("list.json"));
+            var result = PortableTextToHtml.Render(ReadTestJsonFile("list.json"));
             SnapshotExtensions.MatchFormattedHtml(result);
         }
         
         [Fact]
         public void MultipleLevelList()
         {
-            var result = BlockContentToHtml.Render(ReadTestJsonFile("multiple-level-list.json"));
+            var result = PortableTextToHtml.Render(ReadTestJsonFile("multiple-level-list.json"));
             SnapshotExtensions.MatchFormattedHtml(result);
         }
 
         [Fact]
         public void MassiveTest()
         {
-            var result = BlockContentToHtml.Render(ReadTestJsonFile("bigcontent.json"));
+            var result = PortableTextToHtml.Render(ReadTestJsonFile("bigcontent.json"));
             SnapshotExtensions.MatchFormattedHtml(result);
         }
 
