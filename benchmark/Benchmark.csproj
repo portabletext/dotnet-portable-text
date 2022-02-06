@@ -5,10 +5,11 @@
     <LangVersion>default</LangVersion>
     <AssemblyName>PortableText.Benchmark</AssemblyName>
     <RootNamespace>PortableText</RootNamespace>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
   </ItemGroup>
 
   <ItemGroup>

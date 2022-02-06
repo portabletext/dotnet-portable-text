@@ -12,3 +12,6 @@ obj
 
 # Visual Studio
 *.DotSettings.user
+
+# BenchmarkDotnet
+BenchmarkDotNet.Artifacts/*
