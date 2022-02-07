@@ -6,6 +6,7 @@
     <AssemblyName>PortableText.Benchmark</AssemblyName>
     <RootNamespace>PortableText</RootNamespace>
     <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

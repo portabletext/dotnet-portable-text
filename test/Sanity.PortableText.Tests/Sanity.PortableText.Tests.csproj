@@ -5,6 +5,7 @@
     <LangVersion>default</LangVersion>
     <AssemblyName>PortableText.Tests</AssemblyName>
     <RootNamespace>PortableText</RootNamespace>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
