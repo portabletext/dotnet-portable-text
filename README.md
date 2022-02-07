@@ -1,3 +1,5 @@
+[![test](https://github.com/saasen/dotnet-portable-text/actions/workflows/test.yml/badge.svg)](https://github.com/saasen/dotnet-portable-text/actions/workflows/test.yml)
+
 # .NET Portable Text
 
 This repo contains tools for working with [Portable Text](https://portabletext.org) in .NET.
