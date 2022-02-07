@@ -126,7 +126,7 @@ namespace PortableText
             var json = ReadTestJsonFile("simple.json");
             var result = PortableTextToHtml.Render(json);
 
-            result.Should().Be("<p>Jeg er <strong>kul</strong>!</p>");
+            result.Should().Be("<p>Very <strong>nice job</strong>!</p>");
         }
 
         [Fact]
