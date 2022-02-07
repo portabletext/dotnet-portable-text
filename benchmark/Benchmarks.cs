@@ -22,7 +22,7 @@ namespace PortableText
         [Benchmark]
         public string HugeJson() => PortableTextToHtml.Render(json);
     }
-    
+
     public class Program
     {
         public static void Main(string[] args)
