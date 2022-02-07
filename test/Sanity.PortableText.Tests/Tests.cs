@@ -178,14 +178,14 @@ namespace PortableText
         }
         
         [Fact]
-        public void List()
+        public void RendersNestedList()
         {
             var result = PortableTextToHtml.Render(ReadTestJsonFile("list.json"));
             SnapshotExtensions.MatchFormattedHtml(result);
         }
         
         [Fact]
-        public void MultipleLevelList()
+        public void RendersMultipleLevelListCorrectly()
         {
             var result = PortableTextToHtml.Render(ReadTestJsonFile("multiple-level-list.json"));
             SnapshotExtensions.MatchFormattedHtml(result);
