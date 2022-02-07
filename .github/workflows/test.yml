@@ -19,4 +19,9 @@ jobs:
           dotnet-version: "6.0.x"
       - run: dotnet restore
       - run: dotnet build --configuration Release --no-restore
-      - run: dotnet test --no-restore --verbosity normal
+      - run: dotnet test --no-restore --verbosity normal --logger trx --results-directory "testresults"
+      - uses: actions/upload-artifact@v2
+        with:
+          path: testresults
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
