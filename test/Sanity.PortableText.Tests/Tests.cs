@@ -199,6 +199,20 @@ namespace PortableText
         }
         
         [Fact]
+        public void CanCustomizeListItemTypes()
+        {
+            var result = PortableTextToHtml.Render(ReadTestJsonFile("list.json"), new PortableTextSerializers
+            {
+                ListItemSerializers = new()
+                {
+                    { "bullet", () => (@"<li style=""list-style-type: circle;"">", "</li>") }
+                }
+            });
+            
+            SnapshotExtensions.MatchFormattedHtml(result);
+        }
+        
+        [Fact]
         public void RendersMultipleLevelListCorrectly()
         {
             var result = PortableTextToHtml.Render(ReadTestJsonFile("multiple-level-list.json"));

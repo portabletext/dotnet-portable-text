@@ -11,6 +11,7 @@ public class PortableTextSerializers
         MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string, string)>>();
         BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>();
         ListSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>();
+        ListItemSerializers = new Dictionary<string, Func<(string, string)>>();
     }
     public Dictionary<string, TypeSerializer> TypeSerializers { get; set; }
     public Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string, string)>> MarkSerializers { get; set; }
