@@ -96,6 +96,11 @@ public static class PortableTextToHtml
             { "h5", blocks => $"<h5>{string.Join(string.Empty, blocks)}</h5>" },
             { "h6", blocks => $"<h6>{string.Join(string.Empty, blocks)}</h6>" },
             { "blockquote", blocks => $"<blockquote>{string.Join(string.Empty, blocks)}</blockquote>" }
+        },
+        ListSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>
+        {
+            { "bullet", listItems => $"<ul>{string.Join(string.Empty, listItems)}</ul>" },
+            { "number", listItems => $"<ol>{string.Join(string.Empty, listItems)}</ol>" }
         }
     };
 
@@ -137,6 +142,16 @@ public static class PortableTextToHtml
             defaultSerializers.BlockStyleSerializers.ToList().ForEach(x => serializers.BlockStyleSerializers.Add(x.Key, x.Value));
             customSerializers.BlockStyleSerializers.ToList().ForEach(x => serializers.BlockStyleSerializers[x.Key] = x.Value);
         }
+        
+        if (customSerializers.ListSerializers == null || !customSerializers.ListSerializers.Any())
+        {
+            serializers.ListSerializers = defaultSerializers.ListSerializers;
+        }
+        else
+        {
+            defaultSerializers.ListSerializers.ToList().ForEach(x => serializers.ListSerializers.Add(x.Key, x.Value));
+            customSerializers.ListSerializers.ToList().ForEach(x => serializers.ListSerializers[x.Key] = x.Value);
+        }
 
         return serializers;
     }
@@ -159,6 +174,11 @@ public static class PortableTextToHtml
     private static bool SerializerForTypeExists(string type, PortableTextSerializers serializers)
     {
         return serializers.TypeSerializers.TryGetValue(type, out _);
+    }
+    
+    private static bool SerializerForListExists(string listVariant, PortableTextSerializers serializers)
+    {
+        return serializers.ListSerializers.TryGetValue(listVariant, out _);
     }
 
     public static string Render(string json, PortableTextSerializers customSerializers = null)
@@ -215,12 +235,21 @@ public static class PortableTextToHtml
     
     private static string SerializeList(JsonDocument document, JsonElement currentElement, ref int currentIndex, PortableTextSerializers serializers, TypeSerializer serializer)
     {
-        var accumulatedHtml = new List<string>();
         var documentLength = document.RootElement.GetArrayLength();
         var listVariant = currentElement.GetProperty("listItem").GetString();
         var level = currentElement.GetProperty("level").GetInt32();
 
-        var listStuff = new List<string>();
+        if (!SerializerForListExists(listVariant, serializers))
+        {
+            return null;
+        }
+
+        var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, JsonSerializerOptions);
+        var listItems = new List<string>
+        {
+            $"<li>{serializer.Serialize(listItemValue, serializers)}</li>"
+        };
+        
         var siblingIndex = currentIndex + 1;
         while (true)
         {
@@ -242,17 +271,15 @@ public static class PortableTextToHtml
             }
                 
             var siblingLevel = siblingElement.GetProperty("level").GetInt32();
-            // != ?
             if (siblingLevel > level)
             {
                 var serialized = SerializeList(document, siblingElement, ref siblingIndex, serializers, serializer);
-                listStuff.Add($"<li>{serialized}</li>");
+                listItems.Add($"<li>{serialized}</li>");
                 siblingIndex++;
                 currentIndex++;
             }
             else if (siblingLevel < level)
             {
-                // Not hit?
                 break;
             }
             else
@@ -260,30 +287,12 @@ public static class PortableTextToHtml
                 currentIndex++;
                 siblingIndex++;
                 var siblingListItemValue = JsonSerializer.Deserialize(siblingElement.ToString(), serializer.Type, JsonSerializerOptions);
-                listStuff.Add($"<li>{serializer.Serialize(siblingListItemValue, serializers)}</li>");
-            }
-        }
-        
-        var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, JsonSerializerOptions);
-        
-        switch (listVariant)
-        {
-            // TODO: Maybe it would be wise to add custom serializers for lists as well?
-            case "number":
-            {
-                accumulatedHtml.Add($"<ol><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ol>");
-                currentIndex = siblingIndex - 1;
-                break;
-            }
-            case "bullet":
-            {
-                accumulatedHtml.Add($"<ul><li>{serializer.Serialize(listItemValue, serializers)}</li>{string.Join(string.Empty, listStuff)}</ul>");
-                currentIndex = siblingIndex - 1;
-                break;
+                listItems.Add($"<li>{serializer.Serialize(siblingListItemValue, serializers)}</li>");
             }
         }
 
-        return string.Join("", accumulatedHtml);
+        currentIndex = siblingIndex - 1;
+        return serializers.ListSerializers[listVariant](listItems);
     }
 
     private static bool IsElementPortableTextList(JsonElement currentElement)

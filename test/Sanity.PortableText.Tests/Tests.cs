@@ -176,11 +176,25 @@ namespace PortableText
 
             result.Should().Be(@"<iframe title=""Top 10 goals Jon Dahl Tomasson"" href=""https://youtu.be/8d9vXiGrYck""></iframe>");
         }
-        
+
         [Fact]
         public void RendersNestedList()
         {
             var result = PortableTextToHtml.Render(ReadTestJsonFile("list.json"));
+            SnapshotExtensions.MatchFormattedHtml(result);
+        }
+        
+        [Fact]
+        public void CanCustomizeListTypes()
+        {
+            var result = PortableTextToHtml.Render(ReadTestJsonFile("list.json"), new PortableTextSerializers
+            {
+                ListSerializers = new()
+                {
+                    { "bullet", listItems => $@"<ul style=""list-style: square;"">{string.Join(string.Empty, listItems)}</ul>" }
+                }
+            });
+            
             SnapshotExtensions.MatchFormattedHtml(result);
         }
         
