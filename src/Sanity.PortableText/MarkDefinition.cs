@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace PortableText;
 
+// This class is kind of hardcoded to a link markDef
 public class MarkDefinition
 {
     [JsonPropertyName("_key")]
