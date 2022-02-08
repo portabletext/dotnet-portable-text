@@ -47,7 +47,7 @@ public static class PortableTextToHtml
                             {
                                 var tags = blockChild.Marks.Select(mark =>
                                 {
-                                    var defaultSerializer = serializers.MarkSerializers.TryGetValue(mark, out var defaultMarkSerializerExists);
+                                    serializers.MarkSerializers.TryGetValue(mark, out var defaultMarkSerializerExists);
                                     if (defaultMarkSerializerExists != null)
                                     {
                                         return serializers.MarkSerializers[mark](typedBlock, blockChild, mark);

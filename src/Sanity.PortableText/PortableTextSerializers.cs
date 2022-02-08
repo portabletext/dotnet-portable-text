@@ -17,4 +17,11 @@ public class PortableTextSerializers
     public Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string, string)>> MarkSerializers { get; set; }
     public Dictionary<string, Func<IEnumerable<string>, string>> BlockStyleSerializers { get; set; }
     public Dictionary<string, Func<IEnumerable<string>, string>> ListSerializers { get; set; }
+    public Dictionary<string, Func<(string, string)>> ListItemSerializers { get; set; }
+}
+
+public class TypeSerializer
+{
+    public Type Type { get; set; }
+    public Func<object, PortableTextSerializers, string> Serialize { get; set; }
 }
