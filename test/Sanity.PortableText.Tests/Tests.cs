@@ -205,7 +205,7 @@ namespace PortableText
             {
                 ListItemSerializers = new()
                 {
-                    { "bullet", () => (@"<li style=""list-style-type: circle;"">", "</li>") }
+                    { "bullet", () => (@"<li style=""list-style-type: circle;"">🎱 ", "</li>") }
                 }
             });
             
