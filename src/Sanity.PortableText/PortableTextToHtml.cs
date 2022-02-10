@@ -34,10 +34,8 @@ public static class PortableTextToHtml
                             return string.Empty;
                         }
 
-                        var children = typedBlock.Children;
-
                         var blocks = new List<string>();
-                        foreach (var blockChild in children)
+                        foreach (var blockChild in typedBlock.Children)
                         {
                             if (blockChild.Marks == null || !blockChild.Marks.Any())
                             {
@@ -47,14 +45,14 @@ public static class PortableTextToHtml
                             {
                                 var tags = blockChild.Marks.Select(mark =>
                                 {
-                                    serializers.MarkSerializers.TryGetValue(mark, out var defaultMarkSerializerExists);
-                                    if (defaultMarkSerializerExists != null)
+                                    if (SerializerForMarkExists(mark, serializers))
                                     {
                                         return serializers.MarkSerializers[mark](typedBlock, blockChild, mark);
                                     }
 
                                     return serializers.MarkSerializers[typedBlock.MarkDefinitions.First(markDef => markDef.Key == mark).Type](typedBlock, blockChild, mark);
                                 });
+
                                 var startTags = tags.Select(x => x.Item1);
                                 var endTags = tags.Select(x => x.Item2).Reverse();
 
@@ -189,6 +187,11 @@ public static class PortableTextToHtml
     private static bool SerializerForTypeExists(string type, PortableTextSerializers serializers)
     {
         return serializers.TypeSerializers.TryGetValue(type, out _);
+    }
+    
+    private static bool SerializerForMarkExists(string mark, PortableTextSerializers serializers)
+    {
+        return serializers.MarkSerializers.TryGetValue(mark, out _);
     }
     
     private static bool SerializerForListExists(string listVariant, PortableTextSerializers serializers)
