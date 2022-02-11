@@ -9,7 +9,7 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Mvc.TagHelpers" Version="2.2.0" />
-      <ProjectReference Include="..\Sanity.PortableText\Sanity.PortableText.csproj" />
+      <ProjectReference Include="..\PortableText\PortableText.csproj" />
     </ItemGroup>
 
 </Project>

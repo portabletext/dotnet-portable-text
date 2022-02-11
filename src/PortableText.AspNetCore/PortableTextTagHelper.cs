@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Razor.TagHelpers;
 using PortableText;
 
-namespace Sanity.PortableText.AspNetCore;
+namespace PortableText.AspNetCore;
 
 public class PortableTextTagHelper : TagHelper
 {
