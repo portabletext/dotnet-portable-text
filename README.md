@@ -10,6 +10,8 @@ TBD
 
 ## Basic Usage
 
+### Rendering
+
 ```cs
 using PortableText;
 
@@ -17,6 +19,16 @@ var result = PortableTextToHtml.Render(
     json,       // A string value representing your Portable Text
     serializers // Optional. Specifies how to render a certain type, mark, list etc.
 );
+```
+
+### ASP.NET Core Tag Helper
+
+We provide a Tag Helper for easy-of-use in ASP.NET Core projects using Razor. The `portable-text` tag itself will be replaced by nothing. You are therefore responsible of wrapping it in your desired HTML tag.
+
+```html
+@addTagHelper *, Sanity.PortableText.AspNetCore
+
+<portable-text value="@Model.Blocks" />
 ```
 
 ## Customizing rendering
