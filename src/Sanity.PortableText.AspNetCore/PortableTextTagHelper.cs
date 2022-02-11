@@ -6,10 +6,10 @@ namespace Sanity.PortableText.AspNetCore;
 public class PortableTextTagHelper : TagHelper
 {
     [HtmlAttributeName("value")]
-    public string Value { get; set; }
-    
+    public string Value { get; set; } = string.Empty;
+
     [HtmlAttributeName("serializers")]
-    public PortableTextSerializers Serializers { get; set; }
+    public PortableTextSerializers Serializers { get; set; } = new ();
     
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
