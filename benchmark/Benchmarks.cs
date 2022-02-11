@@ -5,7 +5,7 @@ using BenchmarkDotNet.Running;
 
 namespace PortableText
 {
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31, baseline: true)]
     [SimpleJob(RuntimeMoniker.Net50)]
     [SimpleJob(RuntimeMoniker.Net60)]
     [RPlotExporter]
@@ -16,7 +16,7 @@ namespace PortableText
         [GlobalSetup]
         public void Setup()
         {
-            json = File.ReadAllText("C:/code/dotnet-portable-text-to-html/test/Tests/data/bigcontent.json");
+            json = File.ReadAllText("../../../../../../../data/bigcontent.json");
         }
 
         [Benchmark]
