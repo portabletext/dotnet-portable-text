@@ -33,7 +33,62 @@ We provide a Tag Helper for easy-of-use in ASP.NET Core projects using Razor. Th
 
 ## Customizing rendering
 
-You can pass custom serializers in the `serializers` parameter. A serializer takes in a JSON de-serialized type representing your data.
+You can pass custom serializers in the `serializers` parameter.
+
+### Types
+
+A type serializer takes in a JSON de-serialized type representing your data.
+
+This example shows how to render a custom type:
+
+```cs
+var serializers = new PortableTextSerializers
+{
+    TypeSerializers = new Dictionary<string, TypeSerializer>
+    {
+        {
+            "youtubeEmbed", new TypeSerializer
+            {
+                Type = typeof(YoutubeEmbed),
+                Serialize = (block, serializers) =>
+                {
+                    // We are specifying which type we want the JSON de-serialized to, so this is safe.
+                    var typedBlock = block as YoutubeEmbed;
+                    return $@"<iframe title=""{typedBlock.Title}"" href=""{typedBlock.Url}""></iframe>";
+                }
+            }
+        }
+    }
+};
+
+var result = PortableTextToHtml.Render(
+    json,
+    serializers
+);
+```
+
+### Block styles
+
+Block styles typically describes a visual property for the whole block.
+
+You can customize rendering of block styles like this:
+
+```cs
+var serializers = new PortableTextSerializers
+{
+    BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>
+    {
+        { "h1", blocks => $"<h1 className="text-2xl">{string.Join(string.Empty, blocks)}</h1>" }
+    }
+};
+
+var result = PortableTextToHtml.Render(
+    json,
+    serializers
+);
+```
+
+### Marks
 
 This example shows how to render a in-line link in your text:
 
@@ -58,25 +113,35 @@ var result = PortableTextToHtml.Render(
 );
 ```
 
-This example shows how to render a custom type:
+### Lists
+
+This example shows how to customize rendering of a list. It uses the thumbs up sign as the list style type:
 
 ```cs
 var serializers = new PortableTextSerializers
 {
-    TypeSerializers = new Dictionary<string, TypeSerializer>
+    ListSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>()
     {
-        {
-            "youtubeEmbed", new TypeSerializer
-            {
-                Type = typeof(YoutubeEmbed),
-                Serialize = (block, serializers) =>
-                {
-                    // We are specifying which type we want the JSON serialized to, so this is safe.
-                    var typedBlock = block as YoutubeEmbed;
-                    return $@"<iframe title=""{typedBlock.Title}"" href=""{typedBlock.Url}""></iframe>";
-                }
-            }
-        }
+        { "bullet", listItems => @$"<ul style=""list-style-type: ""\1F44D"""">{string.Join(string.Empty, listItems)}</ul>" }
+    }
+};
+
+var result = PortableTextToHtml.Render(
+    json,
+    serializers
+);
+```
+
+### List items
+
+This example shows how to customize rendering of a list item:
+
+```cs
+var serializers = new PortableTextSerializers
+{
+    ListItemSerializers = new Dictionary<string, Func<(string, string)>>
+    {
+         { "bullet", () => (@"<li style=""list-style-type: circle;"">🎱 ", "</li>") }
     }
 };
 
