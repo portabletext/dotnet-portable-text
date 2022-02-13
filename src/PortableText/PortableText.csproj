@@ -7,6 +7,15 @@
     <AssemblyName>PortableText</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>PortableText</PackageId>
+    <PackageDescription>
+      This library contains tools for serializing Portable Text to HTML.
+    </PackageDescription>
+    <PackageTags>Portable Text</PackageTags>
+    <Authors>saasen</Authors>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Text.Json" Version="6.0.1" />
   </ItemGroup>
