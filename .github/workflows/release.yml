@@ -27,4 +27,4 @@ jobs:
       - run: dotnet restore /p:Version=${{github.ref_name}}
       - run: dotnet build --configuration Release --no-restore /p:Version=${{github.ref_name}}
       - run: dotnet pack --configuration Release /p:Version=${{github.ref_name}} --no-build --no-restore --output .
-      - run: dotnet nuget push PortableText.${{github.ref_name}}.nupkg --source --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+      - run: dotnet nuget push PortableText.${{github.ref_name}}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
