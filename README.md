@@ -1,4 +1,5 @@
 [![test](https://github.com/saasen/dotnet-portable-text/actions/workflows/test.yml/badge.svg)](https://github.com/saasen/dotnet-portable-text/actions/workflows/test.yml)
+![Nuget](https://img.shields.io/nuget/v/PortableText?color=blue&logo=nuget)
 
 # .NET Portable Text
 
