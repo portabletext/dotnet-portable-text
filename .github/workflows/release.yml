@@ -24,11 +24,7 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: |
             ${{ runner.os }}-nuget
-      - name: Store version
-        run: |
-          echo ::set-env name=RELEASE_VERSION::"${{github.ref_name}}"
-          echo Version resolved to: $RELEASE_VERSION
-      - run: dotnet restore /p:Version=$(RELEASE_VERSION)
-      - run: dotnet build --configuration Release --no-restore /p:Version=$(RELEASE_VERSION)
-      - run: dotnet pack --configuration Release /p:Version=${RELEASE_VERSION} --no-build --no-restore --output .
-      - run: dotnet nuget push PortableText.${RELEASE_VERSION}.nupkg --source --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+      - run: dotnet restore /p:Version=${{github.ref_name}}
+      - run: dotnet build --configuration Release --no-restore /p:Version=${{github.ref_name}}
+      - run: dotnet pack --configuration Release /p:Version=${{github.ref_name}} --no-build --no-restore --output .
+      - run: dotnet nuget push PortableText.${{github.ref_name}}.nupkg --source --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
