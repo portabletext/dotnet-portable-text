@@ -16,13 +16,6 @@ namespace PortableText
 
     public class Test
     {
-        private readonly ITestOutputHelper output;
-
-        public Test(ITestOutputHelper output)
-        {
-            this.output = output;
-        }
-
         [Fact]
         public void HandlesNull()
         {
@@ -35,6 +28,22 @@ namespace PortableText
         {
             var result = PortableTextToHtml.Render(string.Empty);
             result.Should().BeNull();
+        }
+
+        [Fact]
+        public void ThrowsOnInvalidJson()
+        {
+            bool success = false;
+            try
+            {
+                PortableTextToHtml.Render("[{]");
+                success = true;
+            }
+            catch
+            {
+            }
+
+            Assert.False(success);
         }
 
         [Fact]
@@ -53,69 +62,24 @@ namespace PortableText
             result.Should().Be(null);
         }
 
-        [Fact]
-        public void GivenOneSimpleArrayElementOfTypeBlock()
-        {
-            var result = PortableTextToHtml.Render(@"
-[
-    {
-        ""_type"": ""block"",
-        ""children"": [
-            {
-                ""_type"": ""span"",
-                ""text"": ""test""
-            }
-        ],
-        ""style"": ""normal""
-    }
-]
-");
-                
-            result.Should().Be("<p>test</p>");
-        }
-
-        [Fact]
-        public void GivenMultipleSimpleArrayElementOfTypeBlock_ShouldCombineText()
-        {
-            var result = PortableTextToHtml.Render(@"
-[
-    {
-        ""_type"": ""block"",
-        ""children"": [
-            {
-                ""_type"": ""span"",
-                ""text"": ""test""
-            },
-            {
-                ""_type"": ""span"",
-                ""text"": ""test2""
-            }
-        ],
-        ""style"": ""normal""
-    }
-]
-");
-
-            result.Should().Be("<p>testtest2</p>");
-        }
 
         [Fact]
         public void ConvertsSlashNToBr()
         {
             var result = PortableTextToHtml.Render(@"
-[
-    {
-        ""_type"": ""block"",
-        ""children"": [
-            {
-                ""_type"": ""span"",
-                ""text"": ""test\ntest2""
-            }
-        ],
-        ""style"": ""normal""
-    }
-]
-");
+    [
+        {
+            ""_type"": ""block"",
+            ""children"": [
+                {
+                    ""_type"": ""span"",
+                    ""text"": ""test\ntest2""
+                }
+            ],
+            ""style"": ""normal""
+        }
+    ]
+    ");
 
             result.Should().Be("<p>test<br>test2</p>");
         }
@@ -135,7 +99,9 @@ namespace PortableText
             var json = ReadTestJsonFile("links.json");
             var result = PortableTextToHtml.Render(json);
 
-            result.Should().Be(@"<p><strong>Spotify -> </strong><strong><a href=""https://open.spotify.com/episode/2ON1aZSJvYieU8Pewz7yUH?si=KARaXtuaQDaOkeyxs0f7OQ"">Lytt her!</a></strong></p>");
+            result.Should()
+                .Be(
+                    @"<p><strong>Spotify -> </strong><strong><a href=""https://open.spotify.com/episode/2ON1aZSJvYieU8Pewz7yUH?si=KARaXtuaQDaOkeyxs0f7OQ"">Lytt her!</a></strong></p>");
         }
 
         [Fact]
@@ -174,7 +140,9 @@ namespace PortableText
                 }
             });
 
-            result.Should().Be(@"<iframe title=""Top 10 goals Jon Dahl Tomasson"" href=""https://youtu.be/8d9vXiGrYck""></iframe>");
+            result.Should()
+                .Be(
+                    @"<iframe title=""Top 10 goals Jon Dahl Tomasson"" href=""https://youtu.be/8d9vXiGrYck""></iframe>");
         }
 
         [Fact]
@@ -183,7 +151,7 @@ namespace PortableText
             var result = PortableTextToHtml.Render(ReadTestJsonFile("list.json"));
             SnapshotExtensions.MatchFormattedHtml(result);
         }
-        
+
         [Fact]
         public void CanCustomizeListTypes()
         {
@@ -191,13 +159,16 @@ namespace PortableText
             {
                 ListSerializers = new()
                 {
-                    { "bullet", listItems => $@"<ul style=""list-style: square;"">{string.Join(string.Empty, listItems)}</ul>" }
+                    {
+                        "bullet",
+                        listItems => $@"<ul style=""list-style: square;"">{string.Join(string.Empty, listItems)}</ul>"
+                    }
                 }
             });
-            
+
             SnapshotExtensions.MatchFormattedHtml(result);
         }
-        
+
         [Fact]
         public void CanCustomizeListItemTypes()
         {
@@ -208,10 +179,10 @@ namespace PortableText
                     { "bullet", () => (@"<li style=""list-style-type: circle;"">🎱 ", "</li>") }
                 }
             });
-            
+
             SnapshotExtensions.MatchFormattedHtml(result);
         }
-        
+
         [Fact]
         public void RendersMultipleLevelListCorrectly()
         {
@@ -239,7 +210,8 @@ namespace PortableText
             var parser = new AngleSharp.Html.Parser.HtmlParser();
             using var document = parser.ParseDocument(html);
             using var sw = new StringWriter();
-            var formatter = new AngleSharp.Html.PrettyMarkupFormatter { Indentation = "  ", NewLine = Environment.NewLine };
+            var formatter = new AngleSharp.Html.PrettyMarkupFormatter
+                { Indentation = "  ", NewLine = Environment.NewLine };
             document.ToHtml(sw, formatter);
             Snapshot.Match(sw.ToString());
         }
