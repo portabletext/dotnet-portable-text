@@ -190,13 +190,6 @@ namespace PortableText
             SnapshotExtensions.MatchFormattedHtml(result);
         }
 
-        [Fact]
-        public void MassiveTest()
-        {
-            var result = PortableTextToHtml.Render(ReadTestJsonFile("bigcontent.json"));
-            SnapshotExtensions.MatchFormattedHtml(result);
-        }
-
         private static string ReadTestJsonFile(string filename)
         {
             return File.ReadAllText($"../../../data/{filename}");
