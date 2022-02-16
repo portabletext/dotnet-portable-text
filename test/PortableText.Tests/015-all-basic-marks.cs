@@ -62,7 +62,6 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: Failing because of small typo in mark serializer for underline
         result.Should().Be(string.Join("",
             "<p>",
                 "<code>code</code>",

@@ -72,8 +72,7 @@ public static class PortableTextToHtml
             { "strong", (block, blockChild, mark) => ("<strong>", "</strong>") },
             { "em", (block, blockChild, mark) => ("<em>", "</em>") },
             { "code", (block, blockChild, mark) => ("<code>", "</code>") },
-            // TODO: Inconsistent with spec. Should we no spaces and no semi-colons in this text-decoration.
-            { "underline", (block, blockChild, mark) => (@"<span style=""text-decoration: underline;"">", "</span>") },
+            { "underline", (block, blockChild, mark) => (@"<span style=""text-decoration:underline"">", "</span>") },
             { "strike-through", (block, blockChild, mark) => ("<del>", "</del>") },
 
             // Not happy with this. Do we really need the block in itself? Maybe implement a more dynamic approach?
