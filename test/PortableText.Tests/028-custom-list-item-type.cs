@@ -72,7 +72,7 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: This test fails because we don't default to the defined list item types
+        // TODO: This test fails because we add p-tags to all li-s
         result.Should().Be(string.Join("",
             "<ul>",
                 "<li>Square 1</li>",
