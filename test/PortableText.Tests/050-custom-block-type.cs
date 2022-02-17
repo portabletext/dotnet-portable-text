@@ -1,3 +1,4 @@
+using System.Web;
 using FluentAssertions;
 using Xunit;
 
@@ -8,6 +9,24 @@ public partial class Tests
     [Fact]
     public void CustomBlockType()
     {
+        var serializers = new PortableTextSerializers
+        {
+            TypeSerializers = new()
+            {
+                {
+                    "code",
+                    new TypeSerializer
+                    {
+                        Type = typeof(CodeBlock),
+                        Serialize = (value, textSerializers) =>
+                        {
+                            var code = value as CodeBlock;
+                            return $@"<pre data-language=""{code.Language}""><code>{HttpUtility.HtmlEncode(code.Code)}</code></pre>";
+                        }
+                    }
+                }
+            }
+        };
         var result = PortableTextToHtml.Render(@"
 [
     {
@@ -17,16 +36,23 @@ public partial class Tests
         ""code"": ""const foo = require('foo')\n\nfoo('hi there', (err, thing) => {\n  console.log(err)\n})\n""
     }
 ]
-");
-        // TODO: This test fails because we don't HTML encode the value
+", serializers);
+        
         result.Should().Be(string.Join("",
             @"<pre data-language=""javascript"">",
             "<code>",
-            "const foo = require(&#x27;foo&#x27;)\n\n",
-            "foo(&#x27;hi there&#x27;, (err, thing) =&gt; {\n",
+            "const foo = require(&#39;foo&#39;)\n\n",
+            "foo(&#39;hi there&#39;, (err, thing) =&gt; {\n",
             "  console.log(err)\n",
             "})\n",
             "</code></pre>"
         ));
     }
+
+    private class CodeBlock
+    {
+        public string Language { get; set; }
+        public string Code { get; set; }
+    }
 }
+

@@ -39,7 +39,7 @@ public static class PortableTextToHtml
                         {
                             if (blockChild.Marks == null || !blockChild.Marks.Any())
                             {
-                                blocks.Add(blockChild.Text.Replace("\n", "<br>"));
+                                blocks.Add(blockChild.Text.PortableTextSerialize());
                             }
                             else
                             {
@@ -57,7 +57,7 @@ public static class PortableTextToHtml
                                 var endTags = tags.Select(x => x.Item2).Reverse();
 
                                 blocks.AddRange(startTags);
-                                blocks.Add(blockChild.Text);
+                                blocks.Add(blockChild.Text.PortableTextSerialize());
                                 blocks.AddRange(endTags);
                             }
                         }
