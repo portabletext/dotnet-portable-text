@@ -28,8 +28,7 @@ public static class PortableTextToHtml
                             return string.Empty;
                         }
 
-                        if (string.IsNullOrWhiteSpace(typedBlock.Style) ||
-                            !typedBlock.Children.Any())
+                        if (!typedBlock.Children.Any())
                         {
                             return string.Empty;
                         }
@@ -60,6 +59,11 @@ public static class PortableTextToHtml
                                 blocks.Add(blockChild.Text.PortableTextSerialize());
                                 blocks.AddRange(endTags);
                             }
+                        }
+
+                        if (string.IsNullOrWhiteSpace(typedBlock.Style))
+                        {
+                            return serializers.BlockStyleSerializers["normal"](blocks);
                         }
 
                         return serializers.BlockStyleSerializers[typedBlock.Style](blocks);
