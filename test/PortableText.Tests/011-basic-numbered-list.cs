@@ -70,13 +70,13 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: We have to HTML encode the value (!)
+        // TODO: This test fails because we add a p-tag to all li-s
         result.Should().Be(string.Join("",
             "<p>Let&#x27;s test some of these lists!</p>",
             "<ul>",
-            "<li>Number 1</li>",
-            "<li>Number 2</li>",
-            "<li>Number 3</li>",
+                "<li>Number 1</li>",
+                "<li>Number 2</li>",
+                "<li>Number 3</li>",
             "</ul>"
         ));
     }
