@@ -198,14 +198,24 @@ public static class PortableTextToHtml
         return serializers.MarkSerializers.TryGetValue(mark, out _);
     }
     
-    private static bool SerializerForListExists(string listVariant, PortableTextSerializers serializers)
+    private static Func<IEnumerable<string>, string> GetListSerializer(string listVariant, PortableTextSerializers serializers)
     {
-        return serializers.ListSerializers.TryGetValue(listVariant, out _);
+        if (serializers.ListSerializers.TryGetValue(listVariant, out _))
+        {
+            return serializers.ListSerializers[listVariant];
+        }
+
+        return serializers.ListSerializers["bullet"];
     }
     
-    private static bool SerializerForListItemExists(string listVariant, PortableTextSerializers serializers)
+    private static Func<(string, string)> GetListItemSerializer(string listVariant, PortableTextSerializers serializers)
     {
-        return serializers.ListItemSerializers.TryGetValue(listVariant, out _);
+        if (serializers.ListItemSerializers.TryGetValue(listVariant, out _))
+        {
+            return serializers.ListItemSerializers[listVariant];
+        }
+
+        return serializers.ListItemSerializers["bullet"];
     }
 
     public static string Render(string json, PortableTextSerializers customSerializers = null)
@@ -266,18 +276,8 @@ public static class PortableTextToHtml
         var listVariant = currentElement.GetProperty("listItem").GetString();
         var level = currentElement.GetProperty("level").GetInt32();
 
-        if (!SerializerForListExists(listVariant, serializers))
-        {
-            return null;
-        }
-
-        if (!SerializerForListItemExists(listVariant, serializers))
-        {
-            return null;
-        }
-
         var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, JsonSerializerOptions);
-        var (startTag, endTag) = serializers.ListItemSerializers[listVariant]();
+        var (startTag, endTag) = GetListItemSerializer(listVariant, serializers)();
         var listItems = new List<string>
         {
             $"{startTag}{serializer.Serialize(listItemValue, serializers)}{endTag}"
@@ -325,7 +325,7 @@ public static class PortableTextToHtml
         }
 
         currentIndex = siblingIndex - 1;
-        return serializers.ListSerializers[listVariant](listItems);
+        return GetListSerializer(listVariant, serializers)(listItems);
     }
 
     private static bool IsElementPortableTextList(JsonElement currentElement)
