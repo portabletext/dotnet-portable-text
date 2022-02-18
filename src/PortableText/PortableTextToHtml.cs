@@ -304,7 +304,7 @@ public static class PortableTextToHtml
     {
         var documentLength = document.RootElement.GetArrayLength();
         var listVariant = currentElement.GetProperty("listItem").GetString();
-        var level = currentElement.GetProperty("level").GetInt32();
+        var level = GetListLevel(currentElement);
 
         var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, JsonSerializerOptions);
         var (startTag, endTag) = GetListItemSerializer(listVariant, serializers)();
@@ -328,7 +328,7 @@ public static class PortableTextToHtml
             }
             
             var siblingListItem = siblingElement.GetProperty("listItem").GetString();
-            var siblingLevel = siblingElement.GetProperty("level").GetInt32();
+            var siblingLevel = GetListLevel(siblingElement);
             
             // NOTE: Since we are checking the levels first, the case where a list has a deeper level and a different variant
             // NOTE:     will work correctly when "recovering" from the deeper list. Since we check if the sibling level is less
@@ -359,12 +359,18 @@ public static class PortableTextToHtml
         return GetListSerializer(listVariant, serializers)(listItems.Select(x => $"{startTag + x + endTag}"));
     }
 
+    private static int GetListLevel(JsonElement listElement)
+    {
+        return listElement.TryGetProperty("level", out _)
+            ? listElement.GetProperty("level").GetInt32()
+            : 1;
+    }
+
     private static bool IsElementPortableTextList(JsonElement currentElement)
     {
         try
         {
             currentElement.GetProperty("listItem");
-            currentElement.GetProperty("level");
             return true;
         }
         catch (KeyNotFoundException)
