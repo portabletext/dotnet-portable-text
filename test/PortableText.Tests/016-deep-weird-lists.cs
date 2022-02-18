@@ -168,7 +168,7 @@ public partial class Tests
         ""_type"": ""block"",
         ""_key"": ""aaa"",
         ""markDefs"": [],
-        ""children"": [{ ""_type"": ""span"", ""text"": ""New list"", ""marks"": [] }]
+        ""children"": [{ ""_type"": ""span"", ""text"": ""New List"", ""marks"": [] }]
     },
     {
         ""listItem"": ""number"",
@@ -244,7 +244,7 @@ public partial class Tests
                     "New List",
                     "<ol>",
                         "<li>Next level</li>",
-                    "</ol",
+                    "</ol>",
                 "</li>",
             "</ol>",
             "<ul>",
