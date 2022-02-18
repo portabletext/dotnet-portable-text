@@ -307,11 +307,11 @@ public static class PortableTextToHtml
             var siblingListItem = siblingElement.GetProperty("listItem").GetString();
             var siblingLevel = siblingElement.GetProperty("level").GetInt32();
             
-            // WARNING: Since we are checking the levels first, the case where a list has a deeper level and a different variant
-            // WARNING:     will work correctly when "recovering" from the deeper list. Since we check if the sibling level is less
-            // WARNING:     than the current level, it will short-circuit that. Therefore we won't serialize another new list
-            // WARNING:     with the level we have already been to, as that most likely has the same variant. If the variant is different
-            // WARNING:     however, that will probably crash.
+            // NOTE: Since we are checking the levels first, the case where a list has a deeper level and a different variant
+            // NOTE:     will work correctly when "recovering" from the deeper list. Since we check if the sibling level is less
+            // NOTE:     than the current level, it will short-circuit that. Therefore we won't serialize another new list
+            // NOTE:     with the level we have already been to, as that most likely has the same variant. If the variant is different
+            // NOTE:     however, that will probably crash.
             if (siblingLevel > level)
             {
                 var serialized = SerializeList(document, siblingElement, ref siblingIndex, serializers, serializer);
@@ -319,16 +319,9 @@ public static class PortableTextToHtml
                 siblingIndex++;
                 currentIndex++;
             }
-            else if (siblingLevel < level)
+            else if (siblingLevel < level || siblingListItem != listVariant)
             {
                 break;
-            }
-            else if (siblingListItem != listVariant)
-            {
-                var serialized = SerializeList(document, siblingElement, ref siblingIndex, serializers, serializer);
-                listItems[^1] = listItems.Last() + serialized;
-                siblingIndex++;
-                currentIndex++;
             }
             else
             {

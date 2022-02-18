@@ -56,7 +56,7 @@ public partial class Tests
     {
         ""_key"": ""d"",
         ""_type"": ""block"",
-        ""listItem"": ""bullet"",
+        ""listItem"": ""number"",
         ""level"": 2,
         ""children"": [
             {
@@ -152,7 +152,7 @@ public partial class Tests
             {
                 ""_type"": ""span"",
                 ""marks"": [],
-                ""text"": ""Item 1, list 2""
+                ""text"": ""Item 1 of list 2""
             }
         ],
         ""markDefs"": [],
@@ -167,7 +167,7 @@ public partial class Tests
             {
                 ""_type"": ""span"",
                 ""marks"": [],
-                ""text"": ""Item 2, list 2""
+                ""text"": ""Item 2 of list 2""
             }
         ],
         ""markDefs"": [],
@@ -182,7 +182,7 @@ public partial class Tests
             {
                 ""_type"": ""span"",
                 ""marks"": [],
-                ""text"": ""Item 3, list 2, level 2""
+                ""text"": ""Item 3 of list 2, level 2""
             }
         ],
         ""markDefs"": [],
