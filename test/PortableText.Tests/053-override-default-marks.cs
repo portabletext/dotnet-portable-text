@@ -12,7 +12,7 @@ public partial class Tests
         {
             MarkSerializers = new()
             {
-                { "link", (block, child, mark) => (@"<a class=""mahlink"" href=""https://sanity.io""", "</a>") }
+                { "link", (block, child, mark) => (@"<a class=""mahlink"" href=""https://sanity.io"">", "</a>") }
             }
         };
         var result = PortableTextToHtml.Render(@"
@@ -38,7 +38,6 @@ public partial class Tests
 ]
 ", serializers);
         
-        // TODO: Not entirely sure why this test fails.
         result.Should().Be(@"<p><a class=""mahlink"" href=""https://sanity.io"">Sanity</a></p>");
     }
 }
