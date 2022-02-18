@@ -18,7 +18,7 @@ public partial class Tests
                     new TypeSerializer
                     {
                         Type = typeof(CodeBlock),
-                        Serialize = (value, textSerializers) =>
+                        Serialize = (value, _, _, _) =>
                         {
                             var code = value as CodeBlock;
                             return $@"<pre data-language=""{code.Language}""><code>{HttpUtility.HtmlEncode(code.Code)}</code></pre>";

@@ -23,5 +23,5 @@ public class PortableTextSerializers
 public class TypeSerializer
 {
     public Type Type { get; set; }
-    public Func<object, PortableTextSerializers, string> Serialize { get; set; }
+    public Func<object, string, PortableTextSerializers, bool, string> Serialize { get; set; }
 }
