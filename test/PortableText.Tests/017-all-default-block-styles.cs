@@ -128,7 +128,6 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: We don't default to "normal" style yet, so this test fails.
         result.Should().Be(string.Join("",
             "<h1>Sanity</h1>",
             "<h2>The outline</h2>",

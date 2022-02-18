@@ -70,7 +70,6 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: This test fails because we insert p-tags inside the li-s
         result.Should().Be(string.Join("",
             "<p>Let&#39;s test some of these lists!</p>",
             "<ul>",

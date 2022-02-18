@@ -72,7 +72,6 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: This test fails because we exit the list nesting when we encounter a new listVariant
         result.Should().Be(string.Join("",
             "<ul>",
                 "<li>Square 1</li>",
