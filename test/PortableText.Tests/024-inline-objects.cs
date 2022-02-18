@@ -1,3 +1,4 @@
+using System;
 using FluentAssertions;
 using Xunit;
 
@@ -5,9 +6,42 @@ namespace PortableText;
 
 public partial class Tests
 {
+    private class Currency : PortableTextChild
+    {
+        public string SourceCurrency { get; set; }
+        public decimal SourceAmount { get; set; }
+    }
+    
     [Fact]
     public void InlineObjects()
     {
+        var serializers = new PortableTextSerializers
+        {
+            TypeSerializers = new()
+            {
+                {
+                    "localCurrency",
+                    new()
+                    {
+                        Type = typeof(Currency),
+                        Serialize = (value, _, _, _) =>
+                        {
+                            var currency = value as Currency;
+                            var rates = new System.Collections.Generic.Dictionary<string, decimal>
+                            {
+                                { "USD", 8.82m },
+                                { "DKK", 1.35m },
+                                { "EUR", 10.04m }
+                            };
+                            var rate = rates[currency.SourceCurrency] == default
+                                ? 1m
+                                : rates[currency.SourceCurrency];
+                            return $@"<span class=""currency"">~{Math.Round(currency.SourceAmount * rate)} NOK</span>";
+                        }
+                    }
+                }
+            }
+        };
         var result = PortableTextToHtml.Render(@"
 [
     {
@@ -97,9 +131,8 @@ public partial class Tests
         ""markDefs"": []
     }
 ]
-");
+", serializers);
         
-        // TODO: This test fails as we don't support inline nodes yet
         result.Should().Be(@"<p><code>Foo! Bar!</code><span class=""currency"">~119 NOK</span>Neat</p><p><code>Foo! Bar! </code><span class=""currency"">~270 NOK</span><code> Baz!</code></p><p>Foo! Bar! <span class=""currency"">~251 NOK</span><code> Baz!</code></p>");
     }
 }

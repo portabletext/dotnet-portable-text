@@ -5,9 +5,33 @@ namespace PortableText;
 
 public partial class Tests
 {
+    private class InlineRating : PortableTextChild
+    {
+        public string Type { get; set; }
+        public int Rating { get; set; }
+    }
+    
     [Fact]
     public void InlineNodes()
     {
+        var serializers = new PortableTextSerializers
+        {
+            TypeSerializers = new()
+            {
+                {
+                    "rating",
+                    new()
+                    {
+                        Type = typeof(InlineRating),
+                        Serialize = (value, _, _, _) =>
+                        {
+                            var rating = value as InlineRating;
+                            return $@"<span class=""rating type-{rating.Type} rating-{rating.Rating}""></span>";
+                        }
+                    }
+                }
+            }
+        };
         var result = PortableTextToHtml.Render(@"
 [
     {
@@ -48,13 +72,12 @@ public partial class Tests
         ""style"": ""normal""
     }
 ]
-");
+", serializers);
         
-        // TODO: This test fails because we don't support inline nodes
         result.Should().Be(string.Join("",
             "<p>I enjoyed it. It&#39;s not perfect, but I give it a strong ",
             @"<span class=""rating type-dice rating-5""></span>",
-            ", and look forward to the next season!</p> ",
+            ", and look forward to the next season!</p>",
             "<p>Sibling paragraph</p>"
         ));
     }
