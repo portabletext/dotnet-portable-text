@@ -26,7 +26,6 @@ public partial class Tests
 ]
 ");
         
-        // TODO: This test fails as we are serializing hard breaks to <br>, not <br/>
         result.Should().Be("<p>A paragraph<br/>can have hard<br/><br/>breaks.</p>");
     }
 }

@@ -203,8 +203,6 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: Two bugs here:
-        // TODO:    * When you suddenly see another type of list deep in a level, it starts on level 1
         result.Should().Be(string.Join("",
             "<p>Span</p>",
             "<ul>",
