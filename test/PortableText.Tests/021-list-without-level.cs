@@ -55,7 +55,7 @@ public partial class Tests
             {
                 ""_type"": ""span"",
                 ""marks"": [],
-                ""text"": ""The collection space is located at:\\n20 Ames Street\\nBuilding E15-235\\nCambridge, Massachusetts 02139""
+                ""text"": ""The collection space is located at:\n20 Ames Street\nBuilding E15-235\nCambridge, Massachusetts 02139""
             }
         ],
         ""markDefs"": [],
