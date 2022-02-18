@@ -287,7 +287,7 @@ public static class PortableTextToHtml
         var (startTag, endTag) = GetListItemSerializer(listVariant, serializers)();
         var listItems = new List<string>
         {
-            $"{startTag}{serializer.Serialize(listItemValue, serializers)}{endTag}"
+            $"{serializer.Serialize(listItemValue, serializers)}"
         };
         
         var siblingIndex = currentIndex + 1;
@@ -305,16 +305,17 @@ public static class PortableTextToHtml
             }
             
             var siblingListItem = siblingElement.GetProperty("listItem").GetString();
-            if (siblingListItem != listVariant)
-            {
-                break;
-            }
-                
             var siblingLevel = siblingElement.GetProperty("level").GetInt32();
+            
+            // WARNING: Since we are checking the levels first, the case where a list has a deeper level and a different variant
+            // WARNING:     will work correctly when "recovering" from the deeper list. Since we check if the sibling level is less
+            // WARNING:     than the current level, it will short-circuit that. Therefore we won't serialize another new list
+            // WARNING:     with the level we have already been to, as that most likely has the same variant. If the variant is different
+            // WARNING:     however, that will probably crash.
             if (siblingLevel > level)
             {
                 var serialized = SerializeList(document, siblingElement, ref siblingIndex, serializers, serializer);
-                listItems.Add($"{startTag}{serialized}{endTag}");
+                listItems[^1] = listItems.Last() + serialized;
                 siblingIndex++;
                 currentIndex++;
             }
@@ -322,17 +323,24 @@ public static class PortableTextToHtml
             {
                 break;
             }
+            else if (siblingListItem != listVariant)
+            {
+                var serialized = SerializeList(document, siblingElement, ref siblingIndex, serializers, serializer);
+                listItems[^1] = listItems.Last() + serialized;
+                siblingIndex++;
+                currentIndex++;
+            }
             else
             {
                 currentIndex++;
                 siblingIndex++;
                 var siblingListItemValue = JsonSerializer.Deserialize(siblingElement.ToString(), serializer.Type, JsonSerializerOptions);
-                listItems.Add($"{startTag}{serializer.Serialize(siblingListItemValue, serializers)}{endTag}");
+                listItems.Add($"{serializer.Serialize(siblingListItemValue, serializers)}");
             }
         }
 
         currentIndex = siblingIndex - 1;
-        return GetListSerializer(listVariant, serializers)(listItems);
+        return GetListSerializer(listVariant, serializers)(listItems.Select(x => $"{startTag + x + endTag}"));
     }
 
     private static bool IsElementPortableTextList(JsonElement currentElement)
