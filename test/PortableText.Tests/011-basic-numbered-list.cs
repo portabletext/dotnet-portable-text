@@ -57,7 +57,7 @@ public partial class Tests
         ""_key"": ""a97d32e9f747"",
         ""_type"": ""block"",
         ""level"": 1,
-        ""listItem"": ""bullet"",
+        ""listItem"": ""number"",
         ""children"": [
             {
                 ""_type"": ""span"",
@@ -70,14 +70,14 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: This test fails because we add a p-tag to all li-s
+
         result.Should().Be(string.Join("",
-            "<p>Let&#x27;s test some of these lists!</p>",
-            "<ul>",
+            "<p>Let&#39;s test some of these lists!</p>",
+            "<ol>",
                 "<li>Number 1</li>",
                 "<li>Number 2</li>",
                 "<li>Number 3</li>",
-            "</ul>"
+            "</ol>"
         ));
     }
 }

@@ -61,12 +61,19 @@ public static class PortableTextToHtml
                             }
                         }
 
-                        if (string.IsNullOrWhiteSpace(typedBlock.Style))
+                        var style = string.IsNullOrWhiteSpace(typedBlock.Style) ? "normal" : typedBlock.Style;
+                        var serialized = serializers.BlockStyleSerializers[style](blocks);
+                        
+                        // TODO: Not the most elegant approach, but ListItemSerializers are kind of inconsistent when
+                        // TODO:    using block style serializers - if it's not a normal style, they should use the style,
+                        // TODO:    but if it's a normal style, the p-tag is omitted. That is kind of inconsistent, but maybe
+                        // TODO:    ideal from a user perspective. You don't necessarily want the p-tags inside your li-s
+                        if (style == "normal" && string.IsNullOrWhiteSpace(typedBlock.ListItem) && typedBlock.Level == default)
                         {
-                            return serializers.BlockStyleSerializers["normal"](blocks);
+                            return $"<p>{serialized}</p>";
                         }
 
-                        return serializers.BlockStyleSerializers[typedBlock.Style](blocks);
+                        return serialized;
                     }
                 }
             }
@@ -90,7 +97,7 @@ public static class PortableTextToHtml
         },
         BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>
         {
-            { "normal", blocks => $"<p>{string.Join(string.Empty, blocks)}</p>" },
+            { "normal", blocks => $"{string.Join(string.Empty, blocks)}" },
             { "h1", blocks => $"<h1>{string.Join(string.Empty, blocks)}</h1>" },
             { "h2", blocks => $"<h2>{string.Join(string.Empty, blocks)}</h2>" },
             { "h3", blocks => $"<h3>{string.Join(string.Empty, blocks)}</h3>" },

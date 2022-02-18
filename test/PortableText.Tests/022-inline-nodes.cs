@@ -50,11 +50,9 @@ public partial class Tests
 ]
 ");
         
-        // TODO: This test fails because of two reasons:
-        // TODO:    * We don't support inline nodes
-        // TODO:    * We aren't HTML encoding the text
+        // TODO: This test fails because we don't support inline nodes
         result.Should().Be(string.Join("",
-            "<p>I enjoyed it. It&#x27;s not perfect, but I give it a strong ",
+            "<p>I enjoyed it. It&#39;s not perfect, but I give it a strong ",
             @"<span class=""rating type-dice rating-5""></span>",
             ", and look forward to the next season!</p> ",
             "<p>Sibling paragraph</p>"

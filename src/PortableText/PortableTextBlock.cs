@@ -12,4 +12,8 @@ public class PortableTextBlock
     [JsonPropertyName("markDefs")]
     public MarkDefinition[] MarkDefinitions { get; set; }
     public string Style { get; set; }
+    [JsonPropertyName("listItem")]
+    public string ListItem { get; set; }
+    [JsonPropertyName("level")]
+    public int Level { get; set; }
 }

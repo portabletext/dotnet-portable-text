@@ -205,8 +205,6 @@ public partial class Tests
 ");
         // TODO: Two bugs here:
         // TODO:    * When you suddenly see another type of list deep in a level, it starts on level 1
-        // TODO:    * We are using the block serializer when serializing the list value, so we get a p-tag since it's a "normal" block.
-        // TODO:        It should probably solely be the listItem type that decides that, but what about marks?
         result.Should().Be(string.Join("",
             "<p>Span</p>",
             "<ul>",
