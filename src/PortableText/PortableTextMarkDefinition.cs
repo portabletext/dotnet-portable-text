@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace PortableText;
 
+/// <summary>
+/// A class representing the least amount of data a mark definition can have.
+/// </summary>
 public class PortableTextMarkDefinition
 {
     [JsonPropertyName("_key")]

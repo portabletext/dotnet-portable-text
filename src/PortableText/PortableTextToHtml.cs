@@ -172,6 +172,13 @@ public static class PortableTextToHtml
         }
     };
 
+    /// <summary>
+    /// Serializes a given JSON string representing Portable Text to HTML.
+    /// See the README for more information.
+    /// </summary>
+    /// <param name="json">JSON containing your Portable Text.</param>
+    /// <param name="customSerializers">Your extension point for customizing the rendering of the Portable Text nodes.</param>
+    /// <returns>A HTML representation of the Portable Text.</returns>
     public static string Render(string json, PortableTextSerializers customSerializers = null)
     {
         if (string.IsNullOrWhiteSpace(json))
