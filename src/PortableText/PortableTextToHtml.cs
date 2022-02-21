@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Collections.Generic;
 using System;
+using PortableText.Internal;
 
 namespace PortableText;
 
@@ -43,7 +44,7 @@ public static class PortableTextToHtml
                             var childType = child.GetProperty("_type").GetString();
                             if (childType != "span")
                             {
-                                if (!SerializerForTypeExists(childType, serializers))
+                                if (!PtHelpers.SerializerForTypeExists(childType, serializers))
                                 {
                                     continue;
                                 }
@@ -55,7 +56,7 @@ public static class PortableTextToHtml
                             }
                             else
                             {
-                                var blockChild = child.Deserialize<PortableTextChildSpan>(JsonSerializerOptions);
+                                var blockChild = child.Deserialize<PortableTextBlockChildSpan>(JsonSerializerOptions);
                                 var text = blockChild.Text.PortableTextSerialize();
                                 if (blockChild.Marks == null || !blockChild.Marks.Any())
                                 {
@@ -68,7 +69,7 @@ public static class PortableTextToHtml
                                         var markInMarkDef =
                                             typedBlock.MarkDefinitions.FirstOrDefault(x => x.Key == mark);
 
-                                        if (markInMarkDef != null && SerializerForAnnotationMarkExists(markInMarkDef.Type, serializers))
+                                        if (markInMarkDef != null && PtHelpers.SerializerForMarkAnnotationExists(markInMarkDef.Type, serializers))
                                         {
                                             var annotatedMarkSerializer =
                                                 serializers.MarkSerializers.Annotations[markInMarkDef.Type];
@@ -86,7 +87,7 @@ public static class PortableTextToHtml
                                             return annotatedMarkSerializer.Serialize(customMark, rawMarkDef);
                                         }
 
-                                        if (SerializerForDecoratorMarkExists(mark, serializers))
+                                        if (PtHelpers.SerializerForMarkDecoratorExists(mark, serializers))
                                         {
                                             return serializers.MarkSerializers.Decorators[mark]();
                                         }
@@ -121,7 +122,7 @@ public static class PortableTextToHtml
                 }
             }
         },
-        MarkSerializers = new MarkSerializers
+        MarkSerializers = new MarkSerializer
         {
             Annotations = new Dictionary<string, AnnotatedMarkSerializer>
             {
@@ -171,134 +172,6 @@ public static class PortableTextToHtml
         }
     };
 
-    private static bool SerializerForAnnotationMarkExists(string mark, PortableTextSerializers serializers)
-    {
-        return serializers.MarkSerializers.Annotations.TryGetValue(mark, out _);
-    }
-    
-    private static bool SerializerForDecoratorMarkExists(string mark, PortableTextSerializers serializers)
-    {
-        return serializers.MarkSerializers.Decorators.TryGetValue(mark, out _);
-    }
-
-    private static PortableTextSerializers MergeSerializers(PortableTextSerializers defaultSerializers, PortableTextSerializers customSerializers)
-    {
-        if (customSerializers == null)
-        {
-            return defaultSerializers;
-        }
-
-        var serializers = new PortableTextSerializers();
-
-        if (customSerializers.TypeSerializers == null || !customSerializers.TypeSerializers.Any())
-        {
-            serializers.TypeSerializers = defaultSerializers.TypeSerializers;
-        }
-        else
-        {
-            defaultSerializers.TypeSerializers.ToList().ForEach(x => serializers.TypeSerializers.Add(x.Key, x.Value));
-            customSerializers.TypeSerializers.ToList().ForEach(x => serializers.TypeSerializers[x.Key] = x.Value);
-        }
-
-        if (customSerializers.MarkSerializers == null)
-        {
-            serializers.MarkSerializers = defaultSerializers.MarkSerializers;
-        }
-
-        if (customSerializers.MarkSerializers?.Annotations == null ||
-            !customSerializers.MarkSerializers.Annotations.Any())
-        {
-            serializers.MarkSerializers.Annotations = defaultSerializers.MarkSerializers.Annotations;
-        }
-        else
-        {
-            defaultSerializers.MarkSerializers.Annotations.ToList().ForEach(x => serializers.MarkSerializers.Annotations.Add(x.Key, x.Value));
-            customSerializers.MarkSerializers.Annotations.ToList().ForEach(x => serializers.MarkSerializers.Annotations[x.Key] = x.Value);
-        }
-
-        if (customSerializers.MarkSerializers?.Decorators == null || !customSerializers.MarkSerializers.Decorators.Any())
-        {
-            serializers.MarkSerializers.Decorators = defaultSerializers.MarkSerializers.Decorators;
-        }
-        else
-        {
-            defaultSerializers.MarkSerializers.Decorators.ToList().ForEach(x => serializers.MarkSerializers.Decorators.Add(x.Key, x.Value));
-            customSerializers.MarkSerializers.Decorators.ToList().ForEach(x => serializers.MarkSerializers.Decorators[x.Key] = x.Value);
-        }
-
-        if (customSerializers.BlockStyleSerializers == null || !customSerializers.BlockStyleSerializers.Any())
-        {
-            serializers.BlockStyleSerializers = defaultSerializers.BlockStyleSerializers;
-        }
-        else
-        {
-            defaultSerializers.BlockStyleSerializers.ToList().ForEach(x => serializers.BlockStyleSerializers.Add(x.Key, x.Value));
-            customSerializers.BlockStyleSerializers.ToList().ForEach(x => serializers.BlockStyleSerializers[x.Key] = x.Value);
-        }
-        
-        if (customSerializers.ListSerializers == null || !customSerializers.ListSerializers.Any())
-        {
-            serializers.ListSerializers = defaultSerializers.ListSerializers;
-        }
-        else
-        {
-            defaultSerializers.ListSerializers.ToList().ForEach(x => serializers.ListSerializers.Add(x.Key, x.Value));
-            customSerializers.ListSerializers.ToList().ForEach(x => serializers.ListSerializers[x.Key] = x.Value);
-        }
-        
-        if (customSerializers.ListItemSerializers == null || !customSerializers.ListItemSerializers.Any())
-        {
-            serializers.ListItemSerializers = defaultSerializers.ListItemSerializers;
-        }
-        else
-        {
-            defaultSerializers.ListItemSerializers.ToList().ForEach(x => serializers.ListItemSerializers.Add(x.Key, x.Value));
-            customSerializers.ListItemSerializers.ToList().ForEach(x => serializers.ListItemSerializers[x.Key] = x.Value);
-        }
-
-        return serializers;
-    }
-
-    private static bool IsPortableTextElementValid(JsonElement element)
-    {
-        if (!element.TryGetProperty("_type", out JsonElement typeElement))
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(typeElement.GetString()))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private static bool SerializerForTypeExists(string type, PortableTextSerializers serializers)
-    {
-        return serializers.TypeSerializers.TryGetValue(type, out _);
-    }
-    
-    private static Func<IEnumerable<string>, string> GetListSerializer(string listVariant, PortableTextSerializers serializers)
-    {
-        if (serializers.ListSerializers.TryGetValue(listVariant, out _))
-        {
-            return serializers.ListSerializers[listVariant];
-        }
-
-        return serializers.ListSerializers["bullet"];
-    }
-    
-    private static Func<(string, string)> GetListItemSerializer(string listVariant, PortableTextSerializers serializers)
-    {
-        if (serializers.ListItemSerializers.TryGetValue(listVariant, out _))
-        {
-            return serializers.ListItemSerializers[listVariant];
-        }
-
-        return serializers.ListItemSerializers["bullet"];
-    }
-
     public static string Render(string json, PortableTextSerializers customSerializers = null)
     {
         if (string.IsNullOrWhiteSpace(json))
@@ -306,7 +179,7 @@ public static class PortableTextToHtml
             return null;
         }
 
-        var serializers = MergeSerializers(DefaultBlockSerializers, customSerializers);
+        var serializers = PtHelpers.MergeSerializers(DefaultBlockSerializers, customSerializers);
 
         using var document = JsonDocument.Parse(json);
         var documentLength = document.RootElement.GetArrayLength();
@@ -319,20 +192,20 @@ public static class PortableTextToHtml
         for (var i = 0; i < documentLength; i++)
         {
             var currentElement = document.RootElement[i];
-            if (!IsPortableTextElementValid(currentElement))
+            if (!PtHelpers.IsPortableTextElementValid(currentElement))
             {
                 continue;
             }
 
             var elementType = currentElement.GetProperty("_type").GetString();
-            if (!SerializerForTypeExists(elementType, serializers))
+            if (!PtHelpers.SerializerForTypeExists(elementType, serializers))
             {
                 // Warn?
                 continue;
             }
 
             var serializer = serializers.TypeSerializers[elementType];
-            if (IsElementPortableTextList(currentElement))
+            if (PtHelpers.IsPortableTextElementList(currentElement))
             {
                 accumulatedHtml.Add(SerializeList(document, currentElement, ref i, serializers, serializer));
             }
@@ -356,10 +229,10 @@ public static class PortableTextToHtml
     {
         var documentLength = document.RootElement.GetArrayLength();
         var listVariant = currentElement.GetProperty("listItem").GetString();
-        var level = GetListLevel(currentElement);
+        var level = PtHelpers.GetListLevel(currentElement);
 
         var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, JsonSerializerOptions);
-        var (startTag, endTag) = GetListItemSerializer(listVariant, serializers)();
+        var (startTag, endTag) = PtHelpers.GetListItemSerializer(listVariant, serializers)();
         var listItems = new List<string>
         {
             $"{serializer.Serialize(listItemValue, currentElement.ToString(), serializers, false)}"
@@ -374,13 +247,13 @@ public static class PortableTextToHtml
             }
             
             var siblingElement = document.RootElement[siblingIndex];
-            if (!IsElementPortableTextList(siblingElement))
+            if (!PtHelpers.IsPortableTextElementList(siblingElement))
             {
                 break;
             }
             
             var siblingListItem = siblingElement.GetProperty("listItem").GetString();
-            var siblingLevel = GetListLevel(siblingElement);
+            var siblingLevel = PtHelpers.GetListLevel(siblingElement);
             
             // NOTE: Since we are checking the levels first, the case where a list has a deeper level and a different variant
             // NOTE:     will work correctly when "recovering" from the deeper list. Since we check if the sibling level is less
@@ -408,26 +281,6 @@ public static class PortableTextToHtml
         }
 
         currentIndex = siblingIndex - 1;
-        return GetListSerializer(listVariant, serializers)(listItems.Select(x => $"{startTag + x + endTag}"));
-    }
-
-    private static int GetListLevel(JsonElement listElement)
-    {
-        return listElement.TryGetProperty("level", out _)
-            ? listElement.GetProperty("level").GetInt32()
-            : 1;
-    }
-
-    private static bool IsElementPortableTextList(JsonElement currentElement)
-    {
-        try
-        {
-            currentElement.GetProperty("listItem");
-            return true;
-        }
-        catch (KeyNotFoundException)
-        {
-            return false;
-        }
+        return PtHelpers.GetListSerializer(listVariant, serializers)(listItems.Select(x => $"{startTag + x + endTag}"));
     }
 }
