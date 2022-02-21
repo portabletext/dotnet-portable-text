@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace PortableText;
 
+/// <summary>
+/// A class representing a Portable Text node with _type = block.
+/// </summary>
 public class PortableTextBlock
 {
     [JsonPropertyName("_key")]
