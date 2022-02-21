@@ -12,8 +12,21 @@ public partial class Tests
         {
             MarkSerializers = new()
             {
-                // TODO: we don't support custom mark objects de-serialized, so it's impossible to access custom fields on the markDef
-                { "highlight", (block, child, mark) => ($@"<span style=""border: VALUEpx solid""", "") }
+                Annotations =
+                {
+                    {
+                        "highlight",
+                        new AnnotatedMarkSerializer
+                        {
+                            Type = typeof(Highlight),
+                            Serialize = (value, _) =>
+                            {
+                                var highlight = value as Highlight;
+                                return ($@"<span style=""border:{highlight.Thickness}px solid"">", "</span>");
+                            }
+                        }
+                    }
+                }
             }
         };
         var result = PortableTextToHtml.Render(@"
@@ -51,14 +64,31 @@ public partial class Tests
 ]
 ", serializers);
         
-        // TODO: This test fails, as we don't support de-serializing to custom mark objects
+        
+        // TODO: Technically more correct, as it joins other marks when they are the same.
+        // result.Should().Be(string.Join("",
+        //     "<p>",
+        //     @"<span style=""border:1px solid"">",
+        //     @"<span style=""border:3px solid"">",
+        //     "<em>Sanity FTW</em>",
+        //     "</span>",
+        //     "</span>",
+        //     "</p>"
+        // ));
         result.Should().Be(string.Join("",
             "<p>",
-               @"<span style=""border:1px solid"">",
-               @"<span style=""border:3px solid"">",
-                "<em>Sanity FTW</em>",
-                "</span>",
-                "</span>",
+            @"<span style=""border:1px solid"">",
+            "<em>",
+            @"<span style=""border:3px solid"">",
+            "Sanity",
+            "</span>",
+            "</em>",
+            "</span>",
+            @"<span style=""border:3px solid"">",
+            @"<span style=""border:1px solid"">",
+            "<em> FTW</em>",
+            "</span>",
+            "</span>",
             "</p>"
         ));
     }

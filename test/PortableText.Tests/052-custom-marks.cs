@@ -5,6 +5,11 @@ namespace PortableText;
 
 public partial class Tests
 {
+    public class Highlight
+    {
+        public int Thickness { get; set; }
+    }
+    
     [Fact]
     public void CustomMarks()
     {
@@ -12,7 +17,21 @@ public partial class Tests
         {
             MarkSerializers = new()
             {
-                { "highlight", (block, child, mark) => (@"<span style=""border:VALUEpx solid"">", "</span>") }
+                Annotations =
+                {
+                    {
+                        "highlight",
+                        new AnnotatedMarkSerializer
+                        {
+                            Type = typeof(Highlight),
+                            Serialize = (value, _) =>
+                            {
+                                var highlight = value as Highlight;
+                                return ($@"<span style=""border:{highlight.Thickness}px solid"">", "</span>");
+                            }
+                        }
+                    }
+                }
             }
         };
         var result = PortableTextToHtml.Render(@"
@@ -38,7 +57,6 @@ public partial class Tests
 ]
 ", serializers);
         
-        // TODO: This test fails because we don't support de-serializing custom marks
         result.Should().Be(@"<p><span style=""border:5px solid"">Sanity</span></p>");
     }
 }

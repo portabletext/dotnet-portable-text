@@ -4,7 +4,7 @@ using System.IO;
 
 namespace PortableText
 {
-    public class Test
+    public partial class Tests
     {
         [Fact]
         public void HandlesNull()
@@ -23,7 +23,7 @@ namespace PortableText
         [Fact]
         public void ThrowsOnInvalidJson()
         {
-            bool success = false;
+            var success = false;
             try
             {
                 PortableTextToHtml.Render("[{]");
@@ -31,6 +31,7 @@ namespace PortableText
             }
             catch
             {
+                // ignored
             }
 
             Assert.False(success);
@@ -55,7 +56,7 @@ namespace PortableText
         [Fact]
         public void GivenNoCustomSerializers_AndCustomObjectsArePresent_ShouldNotCrash()
         {
-            var json = @"
+            const string json = @"
 [
     {
         ""_key"": ""88778f6b7024"",
