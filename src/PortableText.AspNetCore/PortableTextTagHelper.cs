@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Razor.TagHelpers;
-using PortableText;
 
 namespace PortableText.AspNetCore;
 

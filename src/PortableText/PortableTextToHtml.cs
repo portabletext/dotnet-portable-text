@@ -65,16 +65,37 @@ public static class PortableTextToHtml
                                 {
                                     var tags = blockChild.Marks.Select(mark =>
                                     {
-                                        if (SerializerForMarkExists(mark, serializers))
+                                        var markInMarkDef =
+                                            typedBlock.MarkDefinitions.FirstOrDefault(x => x.Key == mark);
+
+                                        if (markInMarkDef != null && SerializerForAnnotationMarkExists(markInMarkDef.Type, serializers))
                                         {
-                                            return serializers.MarkSerializers[mark](typedBlock, blockChild, mark);
+                                            var annotatedMarkSerializer =
+                                                serializers.MarkSerializers.Annotations[markInMarkDef.Type];
+                                            string rawMarkDef = null;
+                                            var markDefs = doc.RootElement.GetProperty("markDefs");
+                                            foreach (var markDef in markDefs.EnumerateArray())
+                                            {
+                                                if (markDef.GetProperty("_key").GetString() == mark)
+                                                {
+                                                    rawMarkDef = markDef.ToString();
+                                                }
+                                            }
+
+                                            var customMark = JsonSerializer.Deserialize(rawMarkDef, annotatedMarkSerializer.Type, JsonSerializerOptions);
+                                            return annotatedMarkSerializer.Serialize(customMark, rawMarkDef);
                                         }
 
-                                        return serializers.MarkSerializers[typedBlock.MarkDefinitions.First(markDef => markDef.Key == mark).Type](typedBlock, blockChild, mark);
+                                        if (SerializerForDecoratorMarkExists(mark, serializers))
+                                        {
+                                            return serializers.MarkSerializers.Decorators[mark]();
+                                        }
+
+                                        return (null, null);
                                     });
 
-                                    var startTags = tags.Select(x => x.Item1);
-                                    var endTags = tags.Select(x => x.Item2).Reverse();
+                                    var startTags = tags.Where(x => x.Item1 != null).Select(x => x.Item1);
+                                    var endTags = tags.Where(x => x.Item2 != null).Select(x => x.Item2).Reverse();
 
                                     accumulatedHtml.AddRange(startTags);
                                     accumulatedHtml.Add(text);
@@ -100,21 +121,31 @@ public static class PortableTextToHtml
                 }
             }
         },
-        MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string startTag, string endTag)>>
+        MarkSerializers = new MarkSerializers
         {
-            { "strong", (block, blockChild, mark) => ("<strong>", "</strong>") },
-            { "em", (block, blockChild, mark) => ("<em>", "</em>") },
-            { "code", (block, blockChild, mark) => ("<code>", "</code>") },
-            { "underline", (block, blockChild, mark) => (@"<span style=""text-decoration:underline"">", "</span>") },
-            { "strike-through", (block, blockChild, mark) => ("<del>", "</del>") },
-
-            // Not happy with this. Do we really need the block in itself? Maybe implement a more dynamic approach?
+            Annotations = new Dictionary<string, AnnotatedMarkSerializer>
             {
-                "link", (block, blockChild, mark) =>
                 {
-                    var link = block.MarkDefinitions.First(x => x.Key == mark);
-                    return ($"<a href=\"{link.Href}\">", "</a>");
+                    "link",
+                    new AnnotatedMarkSerializer
+                    {
+                        Type = typeof(LinkPortableTextMarkAnnotation),
+                        Serialize = (value, rawValue) =>
+                        {
+                            var typed = value as LinkPortableTextMarkAnnotation;
+
+                            return ($@"<a href=""{typed.Href}"">", "</a>");
+                        }
+                    }
                 }
+            },
+            Decorators = new Dictionary<string, Func<(string startTag, string endTag)>>
+            {
+                { "strong", () => ("<strong>", "</strong>") },
+                { "em", () => ("<em>", "</em>") },
+                { "code", () => ("<code>", "</code>") },
+                { "underline", () => (@"<span style=""text-decoration:underline"">", "</span>") },
+                { "strike-through", () => ("<del>", "</del>") },
             }
         },
         BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>
@@ -140,6 +171,16 @@ public static class PortableTextToHtml
         }
     };
 
+    private static bool SerializerForAnnotationMarkExists(string mark, PortableTextSerializers serializers)
+    {
+        return serializers.MarkSerializers.Annotations.TryGetValue(mark, out _);
+    }
+    
+    private static bool SerializerForDecoratorMarkExists(string mark, PortableTextSerializers serializers)
+    {
+        return serializers.MarkSerializers.Decorators.TryGetValue(mark, out _);
+    }
+
     private static PortableTextSerializers MergeSerializers(PortableTextSerializers defaultSerializers, PortableTextSerializers customSerializers)
     {
         if (customSerializers == null)
@@ -159,14 +200,30 @@ public static class PortableTextToHtml
             customSerializers.TypeSerializers.ToList().ForEach(x => serializers.TypeSerializers[x.Key] = x.Value);
         }
 
-        if (customSerializers.MarkSerializers == null || !customSerializers.MarkSerializers.Any())
+        if (customSerializers.MarkSerializers == null)
         {
             serializers.MarkSerializers = defaultSerializers.MarkSerializers;
         }
+
+        if (customSerializers.MarkSerializers?.Annotations == null ||
+            !customSerializers.MarkSerializers.Annotations.Any())
+        {
+            serializers.MarkSerializers.Annotations = defaultSerializers.MarkSerializers.Annotations;
+        }
         else
         {
-            defaultSerializers.MarkSerializers.ToList().ForEach(x => serializers.MarkSerializers.Add(x.Key, x.Value));
-            customSerializers.MarkSerializers.ToList().ForEach(x => serializers.MarkSerializers[x.Key] = x.Value);
+            defaultSerializers.MarkSerializers.Annotations.ToList().ForEach(x => serializers.MarkSerializers.Annotations.Add(x.Key, x.Value));
+            customSerializers.MarkSerializers.Annotations.ToList().ForEach(x => serializers.MarkSerializers.Annotations[x.Key] = x.Value);
+        }
+
+        if (customSerializers.MarkSerializers?.Decorators == null || !customSerializers.MarkSerializers.Decorators.Any())
+        {
+            serializers.MarkSerializers.Decorators = defaultSerializers.MarkSerializers.Decorators;
+        }
+        else
+        {
+            defaultSerializers.MarkSerializers.Decorators.ToList().ForEach(x => serializers.MarkSerializers.Decorators.Add(x.Key, x.Value));
+            customSerializers.MarkSerializers.Decorators.ToList().ForEach(x => serializers.MarkSerializers.Decorators[x.Key] = x.Value);
         }
 
         if (customSerializers.BlockStyleSerializers == null || !customSerializers.BlockStyleSerializers.Any())
@@ -220,11 +277,6 @@ public static class PortableTextToHtml
     private static bool SerializerForTypeExists(string type, PortableTextSerializers serializers)
     {
         return serializers.TypeSerializers.TryGetValue(type, out _);
-    }
-    
-    private static bool SerializerForMarkExists(string mark, PortableTextSerializers serializers)
-    {
-        return serializers.MarkSerializers.TryGetValue(mark, out _);
     }
     
     private static Func<IEnumerable<string>, string> GetListSerializer(string listVariant, PortableTextSerializers serializers)

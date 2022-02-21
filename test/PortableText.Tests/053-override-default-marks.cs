@@ -12,7 +12,21 @@ public partial class Tests
         {
             MarkSerializers = new()
             {
-                { "link", (block, child, mark) => (@"<a class=""mahlink"" href=""https://sanity.io"">", "</a>") }
+                Annotations =
+                {
+                    {
+                        "link",
+                        new AnnotatedMarkSerializer
+                        {
+                            Type = typeof(LinkPortableTextMarkAnnotation),
+                            Serialize = (value, _) =>
+                            {
+                                var highlight = value as LinkPortableTextMarkAnnotation;
+                                return ($@"<a class=""mahlink"" href=""https://sanity.io"">", "</a>");
+                            }
+                        }
+                    }
+                }
             }
         };
         var result = PortableTextToHtml.Render(@"

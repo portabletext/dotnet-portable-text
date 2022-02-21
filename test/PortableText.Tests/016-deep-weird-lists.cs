@@ -190,7 +190,7 @@ public partial class Tests
     }
 ]
 ");
-        // TODO: Check why failing...
+
         result.Should().Be(string.Join("",
             "<ul>",
                 "<li>Item a</li>",
