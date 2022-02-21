@@ -6,7 +6,7 @@ namespace PortableText;
 
 public partial class Tests
 {
-    private class Currency : PortableTextChild
+    private class Currency : PortableTextBlockChild
     {
         public string SourceCurrency { get; set; }
         public decimal SourceAmount { get; set; }

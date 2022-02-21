@@ -5,9 +5,9 @@ namespace PortableText;
 
 public partial class Tests
 {
-    private class InlineRating : PortableTextChild
+    private class InlineRating : PortableTextBlockChild
     {
-        public string Type { get; set; }
+        public new string Type { get; set; }
         public int Rating { get; set; }
     }
     
