@@ -7,7 +7,9 @@ This repo contains tools for working with [Portable Text](https://portabletext.o
 
 ## Installation
 
-TBD
+```
+dotnet add package PortableText
+```
 
 ## Basic Usage
 
@@ -91,6 +93,13 @@ var result = PortableTextToHtml.Render(
 
 ### Marks
 
+This library separates annotation marks and decorator marks.
+
+#### Decorator marks
+
+Decorator marks are marks that mean something by themselves.
+Examples of decorator marks would be "em" or "strong" which could mean to emphasize or bold text.
+
 This example shows how to render a in-line link in your text:
 
 ```cs
@@ -98,11 +107,53 @@ var serializers = new PortableTextSerializers
 {
     MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string startTag, string endTag)>>
     {
+        Decorators = new Dictionary<string, Func<(string, string)>>
         {
-            "link", (block, blockChild, mark) =>
             {
-                var link = block.MarkDefinitions.First(x => x.Key == mark);
-                return ($"<a href=\"{link.Href}\">", "</a>");
+                "highlight", () =>
+                {
+                    return ("<em>", "</em>>");
+                }
+            }
+        }
+    }
+};
+
+var result = PortableTextToHtml.Render(
+    json,
+    serializers
+);
+```
+
+#### Annotation marks
+
+Annotation marks are marks that needs additional information other than the name of the mark itself for it to be useful.
+Examples of this would be a "link". A link needs a URL to be meaningful.
+
+```cs
+public class LinkPortableTextMarkAnnotation
+{
+    public string Href { get; set; }
+}
+
+var serializers = new PortableTextSerializers
+{
+    MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string startTag, string endTag)>>
+    {
+        Annotations = new Dictionary<string, AnnotatedMarkSerializer>
+        {
+            {
+                "link",
+                new AnnotatedMarkSerializer
+                {
+                    Type = typeof(LinkPortableTextMarkAnnotation),
+                    Serialize = (value, rawValue) =>
+                    {
+                        var typed = value as LinkPortableTextMarkAnnotation;
+
+                        return ($@"<a href=""{typed.Href}"">", "</a>");
+                    }
+                }
             }
         }
     }
@@ -154,4 +205,5 @@ var result = PortableTextToHtml.Render(
 
 ## Unknown types
 
-When this library encounters unknown types, they are ignored and you get no warnings. If your type isn't outputted, you are probably missing a serializer for it.
+When this library encounters unknown types, they are ignored and you get no warnings.
+If your type isn't outputted, you are probably missing a serializer for it.
