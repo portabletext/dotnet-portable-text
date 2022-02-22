@@ -67,7 +67,7 @@ public static class PortableTextToHtml
                                     var tags = blockChild.Marks.Select(mark =>
                                     {
                                         var markInMarkDef =
-                                            typedBlock.MarkDefinitions.FirstOrDefault(x => x.Key == mark);
+                                            typedBlock.MarkDefinitions?.FirstOrDefault(x => x.Key == mark);
 
                                         if (markInMarkDef != null && PtHelpers.SerializerForMarkAnnotationExists(markInMarkDef.Type, serializers))
                                         {

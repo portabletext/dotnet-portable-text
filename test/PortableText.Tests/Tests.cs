@@ -68,7 +68,31 @@ namespace PortableText
 ";
             var result = PortableTextToHtml.Render(json);
 
-            result.Should().Be(null);
+            result.Should().BeNull();
+        }
+
+        [Fact]
+        public void GivenNoCustomSerializers_AndDecoratorMarksArePresent_ShouldNotCrash()
+        {
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""Test"",
+                ""marks"": [""notDefined""]
+            }
+        ]
+    }
+]
+";
+
+            var result = PortableTextToHtml.Render(json);
+            result.Should().Be("<p>Test</p>");
+        }
+        
         }
     }
 }
