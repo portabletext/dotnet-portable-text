@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Collections.Generic;
+using Xunit;
 using FluentAssertions;
 using System.IO;
 
@@ -42,7 +43,7 @@ namespace PortableText
         {
             var result = PortableTextToHtml.Render("[]");
 
-            result.Should().Be(null);
+            result.Should().BeNull();
         }
 
         [Fact]
@@ -50,7 +51,7 @@ namespace PortableText
         {
             var result = PortableTextToHtml.Render("[{}]");
 
-            result.Should().Be(null);
+            result.Should().BeNull();
         }
 
         [Fact]
@@ -93,6 +94,96 @@ namespace PortableText
             result.Should().Be("<p>Test</p>");
         }
         
+        [Fact]
+        public void GivenNoCustomSerializers_AndAnnotationMarksArePresent_ShouldNotCrash()
+        {
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""Test"",
+                ""marks"": [""notDefinedKey""]
+            }
+        ],
+        ""markDefs"": [
+            {
+                ""_type"": ""notDefined"",
+                ""_key"": ""notDefinedKey"",
+                ""something"": ""test""
+            }
+        ]
+    }
+]
+";
+
+            var result = PortableTextToHtml.Render(json);
+            result.Should().Be("<p>Test</p>");
+        }
+        
+        [Fact]
+        public void GivenSerializerWithSameName_OnDecoratorMark_AndOnAnnotationMark_PrioritizesAnnotationMark()
+        {
+            var serializers = new PortableTextSerializers
+            {
+                MarkSerializers = new()
+                {
+                    Annotations = new()
+                    {
+                        {
+                            "highlighting",
+                            new()
+                            {
+                                Type = typeof(Highlighting),
+                                Serialize = (value, rawValue) =>
+                                {
+                                    var highlighting = value as Highlighting;
+
+                                    return (@$"<span style=""color: {highlighting.HexColor}"">", "</span>");
+                                }
+                            }
+                        }
+                    },
+                    Decorators = new()
+                    {
+                        {
+                            "highlighting", () => ("<em>", "</em>")
+                        }
+                    }
+                }
+            };
+            
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""Test"",
+                ""marks"": [""highlighting""]
+            }
+        ],
+        ""markDefs"": [
+            {
+                ""_type"": ""highlighting"",
+                ""_key"": ""highlighting"",
+                ""hexColor"": ""#888""
+            }
+        ]
+    }
+]
+";
+
+            var result = PortableTextToHtml.Render(json, serializers);
+            result.Should().Be(@"<p><span style=""color: #888"">Test</span></p>");
+        }
+        
+        private class Highlighting
+        {
+            public string HexColor { get; set; }
         }
     }
 }
