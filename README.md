@@ -24,16 +24,6 @@ var result = PortableTextToHtml.Render(
 );
 ```
 
-### ASP.NET Core Tag Helper
-
-We provide a Tag Helper for easy-of-use in ASP.NET Core projects using Razor. The `portable-text` tag itself will be replaced by nothing. You are therefore responsible of wrapping it in your desired HTML tag.
-
-```html
-@addTagHelper *, Sanity.PortableText.AspNetCore
-
-<portable-text value="@Model.Blocks" />
-```
-
 ## Customizing rendering
 
 You can pass custom serializers in the `serializers` parameter.

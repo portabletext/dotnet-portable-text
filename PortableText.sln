@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PortableText.Tests", "test\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "benchmark\Benchmark.csproj", "{2244DCD8-B846-47D8-BAEC-41B6F3B8153C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PortableText.AspNetCore", "src\PortableText.AspNetCore\PortableText.AspNetCore.csproj", "{D244D5C2-C83D-4942-883E-E07ED58087A3}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{2244DCD8-B846-47D8-BAEC-41B6F3B8153C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2244DCD8-B846-47D8-BAEC-41B6F3B8153C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2244DCD8-B846-47D8-BAEC-41B6F3B8153C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D244D5C2-C83D-4942-883E-E07ED58087A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D244D5C2-C83D-4942-883E-E07ED58087A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D244D5C2-C83D-4942-883E-E07ED58087A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D244D5C2-C83D-4942-883E-E07ED58087A3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
