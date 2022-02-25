@@ -197,3 +197,7 @@ var result = PortableTextToHtml.Render(
 
 When this library encounters unknown types, they are ignored and you get no warnings.
 If your type isn't outputted, you are probably missing a serializer for it.
+
+## License
+
+MIT © [Anders Stensaas](https://github.com/saasen/)
