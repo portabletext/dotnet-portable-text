@@ -43,10 +43,10 @@ var serializers = new PortableTextSerializers
             "youtubeEmbed", new TypeSerializer
             {
                 Type = typeof(YoutubeEmbed),
-                Serialize = (block, serializers) =>
+                Serialize = (value, rawValue, serializers, isInline) =>
                 {
                     // We are specifying which type we want the JSON de-serialized to, so this is safe.
-                    var typedBlock = block as YoutubeEmbed;
+                    var typedBlock = value as YoutubeEmbed;
                     return $@"<iframe title=""{typedBlock.Title}"" href=""{typedBlock.Url}""></iframe>";
                 }
             }
@@ -71,7 +71,7 @@ var serializers = new PortableTextSerializers
 {
     BlockStyleSerializers = new Dictionary<string, Func<IEnumerable<string>, string>>
     {
-        { "h1", blocks => $"<h1 className="text-2xl">{string.Join(string.Empty, blocks)}</h1>" }
+        { "h1", blocks => @$"<h1 className=""text-2xl"">{string.Join(string.Empty, blocks)}</h1>" }
     }
 };
 
@@ -95,15 +95,12 @@ This example shows how to render a in-line link in your text:
 ```cs
 var serializers = new PortableTextSerializers
 {
-    MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string startTag, string endTag)>>
+    MarkSerializers =
     {
         Decorators = new Dictionary<string, Func<(string, string)>>
         {
             {
-                "highlight", () =>
-                {
-                    return ("<em>", "</em>>");
-                }
+                "highlight", () => ("<em>", "</em>>")
             }
         }
     }
@@ -128,7 +125,7 @@ public class LinkPortableTextMarkAnnotation
 
 var serializers = new PortableTextSerializers
 {
-    MarkSerializers = new Dictionary<string, Func<PortableTextBlock, PortableTextChild, string, (string startTag, string endTag)>>
+    MarkSerializers =
     {
         Annotations = new Dictionary<string, AnnotatedMarkSerializer>
         {
