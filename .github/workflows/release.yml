@@ -17,7 +17,7 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: "6.0.x"
-      - uses: actions/cache@937d24475381cd9c75ae6db12cb4e79714b926ed # v2
+      - uses: actions/cache@8492260343ad570701412c2f464a5877dc76bace # v2
         with:
           path: ~/.nuget/packages
           # Look to see if there is a cache hit for the corresponding requirements file
