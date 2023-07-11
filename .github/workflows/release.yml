@@ -12,12 +12,12 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: true
 
     steps:
-      - uses: actions/checkout@dc323e67f16fb5f7663d20ff7941f27f5809e9b6 # v2
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2
       - name: Setup .NET 6 SDK
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: "6.0.x"
-      - uses: actions/cache@937d24475381cd9c75ae6db12cb4e79714b926ed # v2
+      - uses: actions/cache@8492260343ad570701412c2f464a5877dc76bace # v2
         with:
           path: ~/.nuget/packages
           # Look to see if there is a cache hit for the corresponding requirements file
