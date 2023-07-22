@@ -5,9 +5,9 @@ using BenchmarkDotNet.Running;
 
 namespace PortableText
 {
-    [SimpleJob(RuntimeMoniker.NetCoreApp31, baseline: true)]
     [SimpleJob(RuntimeMoniker.Net50)]
     [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net70)]
     [RPlotExporter]
     public class Benchmarks
     {
