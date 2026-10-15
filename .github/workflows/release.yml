@@ -24,8 +24,30 @@ jobs:
           global-json-file: global.json
           # Runtime for the net8.0 tests
           dotnet-version: "8.0.x"
+      # The version comes from VersionPrefix in PortableText.csproj. The tag must
+      # match it, optionally with a prerelease suffix (e.g. 2.0.0 or 2.0.0-beta.1).
+      - name: Check tag against VersionPrefix
+        id: version
+        run: |
+          tag="$GITHUB_REF_NAME"
+          if [[ ! "$tag" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-([0-9A-Za-z.-]+))?$ ]]; then
+            echo "::error::Tag '$tag' is not a valid version (expected X.Y.Z or X.Y.Z-suffix)"
+            exit 1
+          fi
+          prefix="${BASH_REMATCH[1]}"
+          suffix="${BASH_REMATCH[3]}"
+          expected="$(dotnet msbuild src/PortableText -getProperty:VersionPrefix)"
+          if [[ "$prefix" != "$expected" ]]; then
+            echo "::error::Tag '$tag' does not match VersionPrefix '$expected' in src/PortableText/PortableText.csproj"
+            exit 1
+          fi
+          echo "suffix=$suffix" >> "$GITHUB_OUTPUT"
       - run: dotnet restore
-      - run: dotnet build --configuration Release --no-restore /p:Version=${{github.ref_name}}
+      - run: dotnet build --configuration Release --no-restore -p:VersionSuffix="$VERSION_SUFFIX"
+        env:
+          VERSION_SUFFIX: ${{ steps.version.outputs.suffix }}
       - run: dotnet test --configuration Release --no-build
-      - run: dotnet pack --configuration Release /p:Version=${{github.ref_name}} --no-build --output .
-      - run: dotnet nuget push PortableText.${{github.ref_name}}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+      - run: dotnet pack --configuration Release --no-build -p:VersionSuffix="$VERSION_SUFFIX" --output artifacts
+        env:
+          VERSION_SUFFIX: ${{ steps.version.outputs.suffix }}
+      - run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
