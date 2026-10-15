@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -32,6 +32,6 @@ public partial class Tests
     }
 ]
 ");
-        result.Should().Be("<p>Span number one. And span number two.</p>");
+        result.ShouldBe("<p>Span number one. And span number two.</p>");
     }
 }

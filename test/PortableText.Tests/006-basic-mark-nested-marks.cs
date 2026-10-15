@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -39,7 +39,7 @@ public partial class Tests
 ]
 ");
         // TODO: This is more technically correct, but the latter works as well...
-        // result.Should().Be("<p><strong>A word of <em>warning;</em></strong> Sanity is addictive.</p>'");
-        result.Should().Be("<p><strong>A word of </strong><strong><em>warning;</em></strong> Sanity is addictive.</p>");
+        // result.ShouldBe("<p><strong>A word of <em>warning;</em></strong> Sanity is addictive.</p>'");
+        result.ShouldBe("<p><strong>A word of </strong><strong><em>warning;</em></strong> Sanity is addictive.</p>");
     }
 }

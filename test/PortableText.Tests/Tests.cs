@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Xunit;
-using FluentAssertions;
+using Shouldly;
 using System.IO;
 
 namespace PortableText
@@ -11,14 +11,14 @@ namespace PortableText
         public void HandlesNull()
         {
             var result = PortableTextToHtml.Render(null);
-            result.Should().BeNull();
+            result.ShouldBeNull();
         }
 
         [Fact]
         public void AcceptsEmptyJson()
         {
             var result = PortableTextToHtml.Render(string.Empty);
-            result.Should().BeNull();
+            result.ShouldBeNull();
         }
 
         [Fact]
@@ -43,7 +43,7 @@ namespace PortableText
         {
             var result = PortableTextToHtml.Render("[]");
 
-            result.Should().BeNull();
+            result.ShouldBeNull();
         }
 
         [Fact]
@@ -51,7 +51,7 @@ namespace PortableText
         {
             var result = PortableTextToHtml.Render("[{}]");
 
-            result.Should().BeNull();
+            result.ShouldBeNull();
         }
 
         [Fact]
@@ -69,7 +69,7 @@ namespace PortableText
 ";
             var result = PortableTextToHtml.Render(json);
 
-            result.Should().BeNull();
+            result.ShouldBeNull();
         }
 
         [Fact]
@@ -91,7 +91,7 @@ namespace PortableText
 ";
 
             var result = PortableTextToHtml.Render(json);
-            result.Should().Be("<p>Test</p>");
+            result.ShouldBe("<p>Test</p>");
         }
         
         [Fact]
@@ -120,7 +120,7 @@ namespace PortableText
 ";
 
             var result = PortableTextToHtml.Render(json);
-            result.Should().Be("<p>Test</p>");
+            result.ShouldBe("<p>Test</p>");
         }
         
         [Fact]
@@ -178,7 +178,7 @@ namespace PortableText
 ";
 
             var result = PortableTextToHtml.Render(json, serializers);
-            result.Should().Be(@"<p><span style=""color: #888"">Test</span></p>");
+            result.ShouldBe(@"<p><span style=""color: #888"">Test</span></p>");
         }
         
         private class Highlighting

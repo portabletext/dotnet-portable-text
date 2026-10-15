@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -10,6 +10,6 @@ public partial class Tests
     {
         var result = PortableTextToHtml.Render("[]");
         
-        result.Should().Be(null);
+        result.ShouldBe(null);
     }
 }

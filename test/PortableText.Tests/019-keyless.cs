@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -47,6 +47,6 @@ public partial class Tests
 ]
 ");
         
-        result.Should().Be("<p>sanity is a full time job</p><p>in a world that is always changing</p>");
+        result.ShouldBe("<p>sanity is a full time job</p><p>in a world that is always changing</p>");
     }
 }

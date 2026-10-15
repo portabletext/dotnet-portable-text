@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -26,6 +26,6 @@ public partial class Tests
 ]
 ");
         
-        result.Should().Be("<p>A paragraph<br/>can have hard<br/><br/>breaks.</p>");
+        result.ShouldBe("<p>A paragraph<br/>can have hard<br/><br/>breaks.</p>");
     }
 }

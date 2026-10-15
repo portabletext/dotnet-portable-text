@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -19,6 +19,6 @@ public partial class Tests
     }
 ]
 ");
-        result.Should().Be("");
+        result.ShouldBe("");
     }
 }

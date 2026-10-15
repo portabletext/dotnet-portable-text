@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -32,6 +32,6 @@ public partial class Tests
     }
 ]
 ");
-        result.Should().Be("<p><code>sanity</code> is the name of the CLI tool.</p>");
+        result.ShouldBe("<p><code>sanity</code> is the name of the CLI tool.</p>");
     }
 }
