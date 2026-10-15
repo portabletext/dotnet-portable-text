@@ -30,95 +30,7 @@ public static class PortableTextToHtml
                         }
 
                         using var doc = JsonDocument.Parse(rawValue);
-                        var childrenRaw = doc.RootElement.GetProperty("children");
-                        var childrenLength = childrenRaw.GetArrayLength();
-
-                        if (childrenLength == 0)
-                        {
-                            return string.Empty;
-                        }
-
-                        var accumulatedHtml = new List<string>();
-                        foreach (var child in childrenRaw.EnumerateArray())
-                        {
-                            var childType = child.GetProperty("_type").GetString();
-                            if (childType != "span")
-                            {
-                                if (!PtHelpers.SerializerForTypeExists(childType, serializers))
-                                {
-                                    continue;
-                                }
-                                
-                                var SpanTypeSerializer = serializers.TypeSerializers[childType];
-                                var typedValue = child.Deserialize(SpanTypeSerializer.Type, JsonSerializerOptions);
-                                var content = SpanTypeSerializer.Serialize(typedValue, child.ToString(), serializers, true);
-                                accumulatedHtml.Add(content);
-                            }
-                            else
-                            {
-                                var blockChild = child.Deserialize<PortableTextBlockChildSpan>(JsonSerializerOptions);
-                                var text = blockChild.Text.PortableTextSerialize();
-                                if (blockChild.Marks == null || !blockChild.Marks.Any())
-                                {
-                                    accumulatedHtml.Add(text);
-                                }
-                                else
-                                {
-                                    var tags = blockChild.Marks.Select(mark =>
-                                    {
-                                        var markInMarkDef =
-                                            typedBlock.MarkDefinitions?.FirstOrDefault(x => x.Key == mark);
-
-                                        if (markInMarkDef != null && PtHelpers.SerializerForMarkAnnotationExists(markInMarkDef.Type, serializers))
-                                        {
-                                            var annotatedMarkSerializer =
-                                                serializers.MarkSerializers.Annotations[markInMarkDef.Type];
-                                            JsonElement markDefElement = default;
-                                            var markDefs = doc.RootElement.GetProperty("markDefs");
-                                            foreach (var markDef in markDefs.EnumerateArray())
-                                            {
-                                                if (markDef.GetProperty("_key").GetString() == mark)
-                                                {
-                                                    markDefElement = markDef;
-                                                }
-                                            }
-
-                                            var rawMarkDef = markDefElement.GetRawText();
-                                            var customMark = markDefElement.Deserialize(annotatedMarkSerializer.Type, JsonSerializerOptions);
-                                            return annotatedMarkSerializer.Serialize(customMark, rawMarkDef);
-                                        }
-
-                                        if (PtHelpers.SerializerForMarkDecoratorExists(mark, serializers))
-                                        {
-                                            return serializers.MarkSerializers.Decorators[mark]();
-                                        }
-
-                                        return (null, null);
-                                    }).ToArray();
-
-                                    var startTags = tags.Where(x => x.Item1 != null).Select(x => x.Item1);
-                                    var endTags = tags.Where(x => x.Item2 != null).Select(x => x.Item2).Reverse();
-
-                                    accumulatedHtml.AddRange(startTags);
-                                    accumulatedHtml.Add(text);
-                                    accumulatedHtml.AddRange(endTags);
-                                }
-                            }
-                        }
-
-                        var style = string.IsNullOrWhiteSpace(typedBlock.Style) ? "normal" : typedBlock.Style;
-                        var serialized = serializers.BlockStyleSerializers[style](accumulatedHtml);
-                        
-                        // NOTE: Not the most elegant approach, but ListItemSerializers are kind of inconsistent when
-                        // NOTE:    using block style serializers - if it's not a normal style, they should use the style,
-                        // NOTE:    but if it's a normal style, the p-tag is omitted. That is kind of inconsistent, but maybe
-                        // NOTE:    ideal from a user perspective. You don't necessarily want the p-tags inside your li-s
-                        if (style == "normal" && string.IsNullOrWhiteSpace(typedBlock.ListItem) && typedBlock.Level == default)
-                        {
-                            return $"<p>{serialized}</p>";
-                        }
-
-                        return serialized;
+                        return RenderBlock(doc.RootElement, typedBlock, serializers);
                     }
                 }
             }
@@ -173,6 +85,8 @@ public static class PortableTextToHtml
         }
     };
 
+    private static readonly TypeSerializer DefaultBlockTypeSerializer = DefaultBlockSerializers.TypeSerializers["block"];
+
     /// <summary>
     /// Serializes a given JSON string representing Portable Text to HTML.
     /// See the README for more information.
@@ -219,9 +133,8 @@ public static class PortableTextToHtml
             }
             else
             {
-                var currentElementJson = currentElement.GetRawText();
                 var value = currentElement.Deserialize(serializer.Type, JsonSerializerOptions);
-                accumulatedHtml.Add(serializer.Serialize(value, currentElementJson, serializers, false));
+                accumulatedHtml.Add(SerializeElement(currentElement, value, serializers, serializer));
             }
         }
 
@@ -233,6 +146,113 @@ public static class PortableTextToHtml
         return string.Join("", accumulatedHtml);
     }
     
+    /// <summary>
+    /// The built-in block serializer renders directly from the parsed element, instead of receiving the element
+    /// as raw JSON and parsing it again. Other serializers receive the raw JSON as before.
+    /// </summary>
+    private static string SerializeElement(JsonElement element, object value, PortableTextSerializers serializers, TypeSerializer serializer)
+    {
+        if (ReferenceEquals(serializer, DefaultBlockTypeSerializer) && value is PortableTextBlock block)
+        {
+            return RenderBlock(element, block, serializers);
+        }
+
+        return serializer.Serialize(value, element.GetRawText(), serializers, false);
+    }
+
+    private static string RenderBlock(JsonElement blockElement, PortableTextBlock typedBlock, PortableTextSerializers serializers)
+    {
+        var childrenRaw = blockElement.GetProperty("children");
+        var childrenLength = childrenRaw.GetArrayLength();
+
+        if (childrenLength == 0)
+        {
+            return string.Empty;
+        }
+
+        var accumulatedHtml = new List<string>();
+        foreach (var child in childrenRaw.EnumerateArray())
+        {
+            var childType = child.GetProperty("_type").GetString();
+            if (childType != "span")
+            {
+                if (!PtHelpers.SerializerForTypeExists(childType, serializers))
+                {
+                    continue;
+                }
+                
+                var SpanTypeSerializer = serializers.TypeSerializers[childType];
+                var typedValue = child.Deserialize(SpanTypeSerializer.Type, JsonSerializerOptions);
+                var content = SpanTypeSerializer.Serialize(typedValue, child.ToString(), serializers, true);
+                accumulatedHtml.Add(content);
+            }
+            else
+            {
+                var blockChild = child.Deserialize<PortableTextBlockChildSpan>(JsonSerializerOptions);
+                var text = blockChild.Text.PortableTextSerialize();
+                if (blockChild.Marks == null || !blockChild.Marks.Any())
+                {
+                    accumulatedHtml.Add(text);
+                }
+                else
+                {
+                    var tags = blockChild.Marks.Select(mark =>
+                    {
+                        var markInMarkDef =
+                            typedBlock.MarkDefinitions?.FirstOrDefault(x => x.Key == mark);
+
+                        if (markInMarkDef != null && PtHelpers.SerializerForMarkAnnotationExists(markInMarkDef.Type, serializers))
+                        {
+                            var annotatedMarkSerializer =
+                                serializers.MarkSerializers.Annotations[markInMarkDef.Type];
+                            JsonElement markDefElement = default;
+                            var markDefs = blockElement.GetProperty("markDefs");
+                            foreach (var markDef in markDefs.EnumerateArray())
+                            {
+                                if (markDef.GetProperty("_key").GetString() == mark)
+                                {
+                                    markDefElement = markDef;
+                                }
+                            }
+
+                            var rawMarkDef = markDefElement.GetRawText();
+                            var customMark = markDefElement.Deserialize(annotatedMarkSerializer.Type, JsonSerializerOptions);
+                            return annotatedMarkSerializer.Serialize(customMark, rawMarkDef);
+                        }
+
+                        if (PtHelpers.SerializerForMarkDecoratorExists(mark, serializers))
+                        {
+                            return serializers.MarkSerializers.Decorators[mark]();
+                        }
+
+                        return (null, null);
+                    }).ToArray();
+
+                    var startTags = tags.Where(x => x.Item1 != null).Select(x => x.Item1);
+                    var endTags = tags.Where(x => x.Item2 != null).Select(x => x.Item2).Reverse();
+
+                    accumulatedHtml.AddRange(startTags);
+                    accumulatedHtml.Add(text);
+                    accumulatedHtml.AddRange(endTags);
+                }
+            }
+        }
+
+        var style = string.IsNullOrWhiteSpace(typedBlock.Style) ? "normal" : typedBlock.Style;
+        var serialized = serializers.BlockStyleSerializers[style](accumulatedHtml);
+        
+        // NOTE: Not the most elegant approach, but ListItemSerializers are kind of inconsistent when
+        // NOTE:    using block style serializers - if it's not a normal style, they should use the style,
+        // NOTE:    but if it's a normal style, the p-tag is omitted. That is kind of inconsistent, but maybe
+        // NOTE:    ideal from a user perspective. You don't necessarily want the p-tags inside your li-s
+        if (style == "normal" && string.IsNullOrWhiteSpace(typedBlock.ListItem) && typedBlock.Level == default)
+        {
+            return $"<p>{serialized}</p>";
+        }
+
+        return serialized;
+    }
+
     private static string SerializeList(JsonDocument document, JsonElement currentElement, ref int currentIndex, PortableTextSerializers serializers, TypeSerializer serializer)
     {
         var documentLength = document.RootElement.GetArrayLength();
@@ -243,7 +263,7 @@ public static class PortableTextToHtml
         var (startTag, endTag) = PtHelpers.GetListItemSerializer(listVariant, serializers)();
         var listItems = new List<string>
         {
-            serializer.Serialize(listItemValue, currentElement.GetRawText(), serializers, false)
+            SerializeElement(currentElement, listItemValue, serializers, serializer)
         };
         
         var siblingIndex = currentIndex + 1;
@@ -284,7 +304,7 @@ public static class PortableTextToHtml
                 currentIndex++;
                 siblingIndex++;
                 var siblingListItemValue = siblingElement.Deserialize(serializer.Type, JsonSerializerOptions);
-                listItems.Add(serializer.Serialize(siblingListItemValue, siblingElement.GetRawText(), serializers, false));
+                listItems.Add(SerializeElement(siblingElement, siblingListItemValue, serializers, serializer));
             }
         }
 
