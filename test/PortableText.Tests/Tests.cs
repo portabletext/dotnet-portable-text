@@ -180,7 +180,72 @@ namespace PortableText
             var result = PortableTextToHtml.Render(json, serializers);
             result.ShouldBe(@"<p><span style=""color: #888"">Test</span></p>");
         }
-        
+
+        [Fact]
+        public void GivenMarkedSpan_CallsEachMarkSerializerOnce()
+        {
+            var annotationCalls = 0;
+            var decoratorCalls = 0;
+            var serializers = new PortableTextSerializers
+            {
+                MarkSerializers = new()
+                {
+                    Annotations = new()
+                    {
+                        {
+                            "highlighting",
+                            new()
+                            {
+                                Type = typeof(Highlighting),
+                                Serialize = (value, rawValue) =>
+                                {
+                                    annotationCalls++;
+                                    return (@$"<span style=""color: {((Highlighting)value).HexColor}"">", "</span>");
+                                }
+                            }
+                        }
+                    },
+                    Decorators = new()
+                    {
+                        {
+                            "strong", () =>
+                            {
+                                decoratorCalls++;
+                                return ("<strong>", "</strong>");
+                            }
+                        }
+                    }
+                }
+            };
+
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""Test"",
+                ""marks"": [""highlightingKey"", ""strong""]
+            }
+        ],
+        ""markDefs"": [
+            {
+                ""_type"": ""highlighting"",
+                ""_key"": ""highlightingKey"",
+                ""hexColor"": ""#888""
+            }
+        ]
+    }
+]
+";
+
+            var result = PortableTextToHtml.Render(json, serializers);
+            result.ShouldBe(@"<p><span style=""color: #888""><strong>Test</strong></span></p>");
+            annotationCalls.ShouldBe(1);
+            decoratorCalls.ShouldBe(1);
+        }
+
         private class Highlighting
         {
             public string HexColor { get; set; }
