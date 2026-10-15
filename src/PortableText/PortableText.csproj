@@ -13,7 +13,7 @@
     <PackageDescription>
       This library contains tools for serializing Portable Text to HTML.
     </PackageDescription>
-    <PackageTags>Portable Text</PackageTags>
+    <PackageTags>portabletext;portable-text;sanity;html</PackageTags>
     <Authors>saasen</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/portabletext/dotnet-portable-text</PackageProjectUrl>
