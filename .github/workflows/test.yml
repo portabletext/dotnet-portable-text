@@ -1,8 +1,13 @@
 name: build-and-test
 
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   test:
@@ -12,23 +17,22 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: true
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup .NET 6 SDK
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: "6.0.x"
-      - uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          # Look to see if there is a cache hit for the corresponding requirements file
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget
+          # SDK used to build, see global.json
+          global-json-file: global.json
+          # Runtime for the net8.0 tests
+          dotnet-version: "8.0.x"
       - run: dotnet restore
       - run: dotnet build --configuration Release --no-restore
-      - run: dotnet test --no-restore --verbosity normal --logger trx --results-directory "testresults"
-      - uses: actions/upload-artifact@v4
+      - run: dotnet test --configuration Release --no-build --logger trx --results-directory "testresults"
+      # Runs package validation
+      - run: dotnet pack --configuration Release --no-build --output artifacts
+      - uses: actions/upload-artifact@v7
         with:
+          name: testresults
           path: testresults
         # Use always() to always run this step to publish test results when there are test failures
         if: ${{ always() }}
