@@ -1,5 +1,5 @@
 using System.Web;
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -38,7 +38,7 @@ public partial class Tests
 ]
 ", serializers);
         
-        result.Should().Be(string.Join("",
+        result.ShouldBe(string.Join("",
             @"<pre data-language=""javascript"">",
             "<code>",
             "const foo = require(&#39;foo&#39;)\n\n",

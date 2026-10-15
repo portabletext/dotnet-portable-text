@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -56,7 +56,7 @@ public partial class Tests
 ]
 ");
         // TODO: This is more technically correct, but the latter works as well...
-        // result.Should().Be(@"<blockquote><a href=""https://sanity.io/"">Sanity</a> can be used to power almost any <a href=""https://sanity.io/""><em><strong>app</strong> or website</em></a>.</blockquote>");
-        result.Should().Be(@"<blockquote><a href=""https://sanity.io/"">Sanity</a> can be used to power almost any <a href=""https://sanity.io/""><strong><em>app</em></strong></a><em><a href=""https://sanity.io/""> or website</a></em>.</blockquote>");
+        // result.ShouldBe(@"<blockquote><a href=""https://sanity.io/"">Sanity</a> can be used to power almost any <a href=""https://sanity.io/""><em><strong>app</strong> or website</em></a>.</blockquote>");
+        result.ShouldBe(@"<blockquote><a href=""https://sanity.io/"">Sanity</a> can be used to power almost any <a href=""https://sanity.io/""><strong><em>app</em></strong></a><em><a href=""https://sanity.io/""> or website</a></em>.</blockquote>");
     }
 }

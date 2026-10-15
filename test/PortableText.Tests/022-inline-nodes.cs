@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -74,7 +74,7 @@ public partial class Tests
 ]
 ", serializers);
         
-        result.Should().Be(string.Join("",
+        result.ShouldBe(string.Join("",
             "<p>I enjoyed it. It&#39;s not perfect, but I give it a strong ",
             @"<span class=""rating type-dice rating-5""></span>",
             ", and look forward to the next season!</p>",

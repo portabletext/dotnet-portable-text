@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -57,6 +57,6 @@ public partial class Tests
 ]
 ", serializers);
         
-        result.Should().Be(@"<p><span style=""border:5px solid"">Sanity</span></p>");
+        result.ShouldBe(@"<p><span style=""border:5px solid"">Sanity</span></p>");
     }
 }

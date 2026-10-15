@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -66,7 +66,7 @@ public partial class Tests
         
         
         // TODO: Technically more correct, as it joins other marks when they are the same.
-        // result.Should().Be(string.Join("",
+        // result.ShouldBe(string.Join("",
         //     "<p>",
         //     @"<span style=""border:1px solid"">",
         //     @"<span style=""border:3px solid"">",
@@ -75,7 +75,7 @@ public partial class Tests
         //     "</span>",
         //     "</p>"
         // ));
-        result.Should().Be(string.Join("",
+        result.ShouldBe(string.Join("",
             "<p>",
             @"<span style=""border:1px solid"">",
             "<em>",

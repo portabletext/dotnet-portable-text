@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -128,7 +128,7 @@ public partial class Tests
     }
 ]
 ");
-        result.Should().Be(string.Join("",
+        result.ShouldBe(string.Join("",
             "<h1>Sanity</h1>",
             "<h2>The outline</h2>",
             "<h3>More narrow details</h3>",

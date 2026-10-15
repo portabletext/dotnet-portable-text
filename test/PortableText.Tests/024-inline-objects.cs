@@ -1,5 +1,5 @@
 using System;
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -133,6 +133,6 @@ public partial class Tests
 ]
 ", serializers);
         
-        result.Should().Be(@"<p><code>Foo! Bar!</code><span class=""currency"">~119 NOK</span>Neat</p><p><code>Foo! Bar! </code><span class=""currency"">~270 NOK</span><code> Baz!</code></p><p>Foo! Bar! <span class=""currency"">~251 NOK</span><code> Baz!</code></p>");
+        result.ShouldBe(@"<p><code>Foo! Bar!</code><span class=""currency"">~119 NOK</span>Neat</p><p><code>Foo! Bar! </code><span class=""currency"">~270 NOK</span><code> Baz!</code></p><p>Foo! Bar! <span class=""currency"">~251 NOK</span><code> Baz!</code></p>");
     }
 }

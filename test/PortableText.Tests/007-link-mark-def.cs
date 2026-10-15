@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using Xunit;
 
 namespace PortableText;
@@ -44,6 +44,6 @@ public partial class Tests
     }
 ]
 ");
-        result.Should().Be(@"<p>A word of warning; <a href=""https://sanity.io/"">Sanity</a> is addictive.</p>");
+        result.ShouldBe(@"<p>A word of warning; <a href=""https://sanity.io/"">Sanity</a> is addictive.</p>");
     }
 }
