@@ -51,15 +51,7 @@ internal static class PtHelpers
 
     internal static bool IsPortableTextElementList(JsonElement currentElement)
     {
-        try
-        {
-            currentElement.GetProperty("listItem");
-            return true;
-        }
-        catch (KeyNotFoundException)
-        {
-            return false;
-        }
+        return currentElement.TryGetProperty("listItem", out _);
     }
     
     internal static bool IsPortableTextElementValid(JsonElement element)
