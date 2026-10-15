@@ -73,17 +73,18 @@ public static class PortableTextToHtml
                                         {
                                             var annotatedMarkSerializer =
                                                 serializers.MarkSerializers.Annotations[markInMarkDef.Type];
-                                            string rawMarkDef = null;
+                                            JsonElement markDefElement = default;
                                             var markDefs = doc.RootElement.GetProperty("markDefs");
                                             foreach (var markDef in markDefs.EnumerateArray())
                                             {
                                                 if (markDef.GetProperty("_key").GetString() == mark)
                                                 {
-                                                    rawMarkDef = markDef.ToString();
+                                                    markDefElement = markDef;
                                                 }
                                             }
 
-                                            var customMark = JsonSerializer.Deserialize(rawMarkDef, annotatedMarkSerializer.Type, JsonSerializerOptions);
+                                            var rawMarkDef = markDefElement.GetRawText();
+                                            var customMark = markDefElement.Deserialize(annotatedMarkSerializer.Type, JsonSerializerOptions);
                                             return annotatedMarkSerializer.Serialize(customMark, rawMarkDef);
                                         }
 
@@ -218,8 +219,8 @@ public static class PortableTextToHtml
             }
             else
             {
-                var currentElementJson = currentElement.ToString();
-                var value = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, JsonSerializerOptions);
+                var currentElementJson = currentElement.GetRawText();
+                var value = currentElement.Deserialize(serializer.Type, JsonSerializerOptions);
                 accumulatedHtml.Add(serializer.Serialize(value, currentElementJson, serializers, false));
             }
         }
@@ -238,11 +239,11 @@ public static class PortableTextToHtml
         var listVariant = currentElement.GetProperty("listItem").GetString();
         var level = PtHelpers.GetListLevel(currentElement);
 
-        var listItemValue = JsonSerializer.Deserialize(currentElement.ToString(), serializer.Type, JsonSerializerOptions);
+        var listItemValue = currentElement.Deserialize(serializer.Type, JsonSerializerOptions);
         var (startTag, endTag) = PtHelpers.GetListItemSerializer(listVariant, serializers)();
         var listItems = new List<string>
         {
-            $"{serializer.Serialize(listItemValue, currentElement.ToString(), serializers, false)}"
+            serializer.Serialize(listItemValue, currentElement.GetRawText(), serializers, false)
         };
         
         var siblingIndex = currentIndex + 1;
@@ -282,8 +283,8 @@ public static class PortableTextToHtml
             {
                 currentIndex++;
                 siblingIndex++;
-                var siblingListItemValue = JsonSerializer.Deserialize(siblingElement.ToString(), serializer.Type, JsonSerializerOptions);
-                listItems.Add($"{serializer.Serialize(siblingListItemValue, siblingElement.ToString(), serializers, false)}");
+                var siblingListItemValue = siblingElement.Deserialize(serializer.Type, JsonSerializerOptions);
+                listItems.Add(serializer.Serialize(siblingListItemValue, siblingElement.GetRawText(), serializers, false));
             }
         }
 
