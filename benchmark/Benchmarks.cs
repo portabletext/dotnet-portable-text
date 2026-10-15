@@ -58,11 +58,32 @@ namespace PortableText
     {
         public static void Main(string[] args)
         {
-            var config = DefaultConfig.Instance
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, CreateConfig());
+        }
+
+        private static IConfig CreateConfig()
+        {
+            // Set by compare.sh: benchmark a package built from the base commit ("Base")
+            // against the working tree ("Diff") in the same run, on the current runtime.
+            var baselineVersion = Environment.GetEnvironmentVariable("PORTABLETEXT_BASELINE_VERSION");
+            var baselineSource = Environment.GetEnvironmentVariable("PORTABLETEXT_BASELINE_SOURCE");
+            if (!string.IsNullOrEmpty(baselineVersion))
+            {
+                return DefaultConfig.Instance
+                    .AddJob(Job.Default
+                        .WithMsBuildArguments(
+                            $"/p:PortableTextBaselineVersion={baselineVersion}",
+                            $"/p:RestoreAdditionalProjectSources={baselineSource}")
+                        .WithId("Base")
+                        .AsBaseline())
+                    .AddJob(Job.Default.WithId("Diff"))
+                    // Shows the MSBuild arguments of the Base job, including a temporary path
+                    .HideColumns("Arguments");
+            }
+
+            return DefaultConfig.Instance
                 .AddJob(Job.Default.WithRuntime(CoreRuntime.Core80))
                 .AddJob(Job.Default.WithRuntime(CoreRuntime.Core10_0));
-
-            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
         }
     }
 }

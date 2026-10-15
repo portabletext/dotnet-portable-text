@@ -12,8 +12,13 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- compare.sh sets PortableTextBaselineVersion for the "Base" job, which then uses a package built from the base commit -->
+  <ItemGroup Condition="'$(PortableTextBaselineVersion)' == ''">
     <ProjectReference Include="..\src\PortableText\PortableText.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(PortableTextBaselineVersion)' != ''">
+    <PackageReference Include="PortableText" Version="[$(PortableTextBaselineVersion)]" />
   </ItemGroup>
 
   <ItemGroup>
