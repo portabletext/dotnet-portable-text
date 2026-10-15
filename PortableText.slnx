@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="benchmark/Benchmark.csproj" />
+  <Project Path="src/PortableText/PortableText.csproj" />
+  <Project Path="test/PortableText.Tests/PortableText.Tests.csproj" />
+</Solution>
