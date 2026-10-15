@@ -16,4 +16,8 @@
     <ProjectReference Include="..\src\PortableText\PortableText.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="data\bigcontent.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -14,4 +14,4 @@ obj
 *.DotSettings.user
 
 # BenchmarkDotnet
-BenchmarkDotNet.Artifacts/*
+BenchmarkDotNet.Artifacts/
