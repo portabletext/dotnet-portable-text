@@ -94,7 +94,7 @@ public static class PortableTextToHtml
                                         }
 
                                         return (null, null);
-                                    });
+                                    }).ToArray();
 
                                     var startTags = tags.Where(x => x.Item1 != null).Select(x => x.Item1);
                                     var endTags = tags.Where(x => x.Item2 != null).Select(x => x.Item2).Reverse();
