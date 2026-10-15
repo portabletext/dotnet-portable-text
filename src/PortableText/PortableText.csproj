@@ -15,7 +15,16 @@
     </PackageDescription>
     <PackageTags>Portable Text</PackageTags>
     <Authors>saasen</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/portabletext/dotnet-portable-text</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/portabletext/dotnet-portable-text</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <PropertyGroup>
     <EnablePackageValidation>true</EnablePackageValidation>
