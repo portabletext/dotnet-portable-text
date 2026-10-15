@@ -11,6 +11,10 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Lets NuGet/login exchange a GitHub OIDC token for a short-lived API key
+      id-token: write
     env:
       DOTNET_NOLOGO: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
@@ -50,4 +54,12 @@ jobs:
       - run: dotnet pack --configuration Release --no-build -p:VersionSuffix="$VERSION_SUFFIX" --output artifacts
         env:
           VERSION_SUFFIX: ${{ steps.version.outputs.suffix }}
-      - run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
+      # Trusted publishing, see https://learn.microsoft.com/nuget/nuget-org/trusted-publishing
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: login
+        with:
+          # nuget.org username (public), not an email address
+          user: saasen
+      # Short-lived key from the NuGet login step above, not a stored secret
+      - run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
