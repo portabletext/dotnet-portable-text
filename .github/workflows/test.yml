@@ -24,7 +24,7 @@ jobs:
           # SDK used to build, see global.json
           global-json-file: global.json
           # Runtime for the net8.0 tests
-          dotnet-version: "8.0.x"
+          dotnet-version: "10.0.402"
       - run: dotnet restore
       - run: dotnet build --configuration Release --no-restore
       - run: dotnet test --configuration Release --no-build --logger trx --results-directory "testresults"
