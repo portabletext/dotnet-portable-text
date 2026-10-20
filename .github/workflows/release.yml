@@ -57,7 +57,7 @@ jobs:
           VERSION_SUFFIX: ${{ steps.version.outputs.suffix }}
       # Trusted publishing, see https://learn.microsoft.com/nuget/nuget-org/trusted-publishing
       - name: NuGet login
-        uses: NuGet/login@v1
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
         id: login
         with:
           # nuget.org username (public), not an email address
