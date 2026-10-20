@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>sanity-io/renovate-presets//ecosystem/auto"]
+  "extends": ["github>sanity-io/renovate-presets//ecosystem/auto"],
+  "packageRules": [
+    {
+      "description": "dotnet-version in actions/setup-dotnet installs the .NET 8 runtime for the net8.0 tests. The SDK comes from global.json.",
+      "matchManagers": ["github-actions"],
+      "matchDepTypes": ["uses-with"],
+      "matchDepNames": ["dotnet-sdk"],
+      "enabled": false
+    }
+  ]
 }
