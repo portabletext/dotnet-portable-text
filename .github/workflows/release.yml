@@ -27,7 +27,7 @@ jobs:
           # SDK used to build, see global.json
           global-json-file: global.json
           # Runtime for the net8.0 tests
-          dotnet-version: "8.0.x"
+          dotnet-version: "9.0.319"
       # The version comes from VersionPrefix in PortableText.csproj. The tag must
       # match it, optionally with a prerelease suffix (e.g. 2.0.0 or 2.0.0-beta.1).
       - name: Check tag against VersionPrefix
