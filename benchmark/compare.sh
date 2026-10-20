@@ -57,8 +57,8 @@ echo "==> Packing PortableText from $base_sha"
 git -C "$repo_root" worktree add --detach --quiet "$work/base" "$base_sha"
 # Unique per commit, so NuGet's package cache never serves a different build under the same version
 baseline_version="0.0.0-baseline.g$base_sha"
-dotnet pack "$work/base/src/PortableText" --configuration Release --output "$work/feed" --nologo \
-  -p:Version="$baseline_version" -p:EnablePackageValidation=false -p:IncludeSymbols=false >/dev/null
+dotnet pack "$work/base/src/PortableText" --configuration Release --output "$work/feed" --nologo --verbosity quiet \
+  -p:Version="$baseline_version" -p:EnablePackageValidation=false -p:IncludeSymbols=false
 
 # Run every benchmark unless the extra arguments contain a filter. BenchmarkDotNet rejects
 # --filter when it is given twice.
