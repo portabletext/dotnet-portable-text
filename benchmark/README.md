@@ -42,3 +42,21 @@ table in the commit message.
 
 Allocated bytes and exceptions are deterministic for a given runtime, so they are hard evidence.
 Time varies between runs and machines, so only compare times from the same run.
+
+## Results history
+
+Each folder in `benchmark/results/` is the evidence for one change:
+
+- Name it `<NN>-<what-changed>`, with the next free number and lowercase words separated by
+  dashes, for example `05-cache-merged-serializers`. Don't use slashes, they create nested folders.
+- Commit it in the same commit as the change. That commit is the "after" state and its parent is
+  the "before" state. The SHAs in `report.md` are the ones at measurement time and change when a
+  pull request is merged, so find the commit with git instead:
+
+      git log --diff-filter=A --format='%h %s' -- benchmark/results/<name>
+      git log --reverse --format='%h %ad %s' --date=short -- benchmark/results/
+
+- Don't rename or change existing benchmarks or `data/bigcontent.json`. Add a new scenario
+  instead, so older results stay comparable.
+- Allocated bytes and exceptions can be compared between reports measured on the same .NET
+  runtime version. Times can only be compared within one report.
