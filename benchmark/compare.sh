@@ -60,11 +60,20 @@ baseline_version="0.0.0-baseline.g$base_sha"
 dotnet pack "$work/base/src/PortableText" --configuration Release --output "$work/feed" --nologo \
   -p:Version="$baseline_version" -p:EnablePackageValidation=false -p:IncludeSymbols=false >/dev/null
 
+# Run every benchmark unless the extra arguments contain a filter. BenchmarkDotNet rejects
+# --filter when it is given twice.
+has_filter=false
+for arg in ${extra_args[@]+"${extra_args[@]}"}; do
+  case "$arg" in --filter|--filter=*|-f) has_filter=true ;; esac
+done
+filter_args=()
+if [[ "$has_filter" == false ]]; then filter_args=(--filter '*'); fi
+
 echo "==> Benchmarking $base_sha (Base) against the working tree (Diff) on $framework"
 PORTABLETEXT_BASELINE_VERSION="$baseline_version" \
 PORTABLETEXT_BASELINE_SOURCE="$work/feed" \
   dotnet run --configuration Release --framework "$framework" --project "$repo_root/benchmark" -- \
-    --filter '*' --statisticalTest 3% --exporters json --artifacts "$work/artifacts" \
+    ${filter_args[@]+"${filter_args[@]}"} --statisticalTest 3% --exporters json --artifacts "$work/artifacts" \
     ${extra_args[@]+"${extra_args[@]}"}
 
 mkdir -p "$results_dir"
