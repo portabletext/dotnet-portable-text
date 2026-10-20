@@ -48,7 +48,7 @@ Time varies between runs and machines, so only compare times from the same run.
 Each folder in `benchmark/results/` is the evidence for one change:
 
 - Name it `<NN>-<what-changed>`, with the next free number and lowercase words separated by
-  dashes, for example `05-cache-merged-serializers`. Don't use slashes, they create nested folders.
+  dashes, for example `05-cache-merged-serializers`. `compare.sh` rejects names with slashes.
 - Commit it in the same commit as the change. That commit is the "after" state and its parent is
   the "before" state. The SHAs in `report.md` are the ones at measurement time and change when a
   pull request is merged, so find the commit with git instead:

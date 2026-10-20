@@ -33,6 +33,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ "$name" == */* ]]; then
+  echo "error: the name must not contain '/', since it is a single folder in benchmark/results: $name" >&2
+  exit 1
+fi
+
 framework="${FRAMEWORK:-net10.0}"
 repo_root="$(git rev-parse --show-toplevel)"
 base_sha="$(git -C "$repo_root" rev-parse --verify --short=12 "$base_ref^{commit}")"
