@@ -8,6 +8,13 @@
       "matchDepTypes": ["uses-with"],
       "matchDepNames": ["dotnet-sdk"],
       "enabled": false
+    },
+    {
+      "description": "global.json sets the minimum .NET SDK, and rollForward picks the newest installed 10.0.x. Only propose new major versions.",
+      "matchDepTypes": ["dotnet-sdk"],
+      "matchDepNames": ["dotnet-sdk"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "enabled": false
     }
   ]
 }
