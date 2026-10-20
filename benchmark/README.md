@@ -17,12 +17,16 @@ exceptions (`ExceptionDiagnoser`). Use `--filter '*Article*'` to run a subset.
 
 ## Proving a performance change
 
-Every performance change should come with evidence that it is an improvement. Make the change
-in the working tree, then compare it with the commit it is based on:
+Every performance change should come with evidence that it is an improvement. Make the change,
+then compare it with the commit it is based on:
 
 ```sh
-benchmark/compare.sh HEAD <short-name>
+benchmark/compare.sh HEAD <short-name>   # uncommitted changes in the working tree
+benchmark/compare.sh main <short-name>   # commits on a branch, compared with main
 ```
+
+There is no stored baseline. The script builds `Base` from the given commit every time,
+because times measured on another machine or at another time are not comparable.
 
 The script packs the library from the base commit and benchmarks it (`Base`) against the
 working tree (`Diff`) in the same BenchmarkDotNet run, on the same machine. It stores the results
