@@ -24,9 +24,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
-          # SDK used to build, see global.json
+          # Installs the SDK from global.json (.NET 10, including the .NET 10 runtime)
           global-json-file: global.json
-          # Runtime for the net8.0 tests
+          # Installs the .NET 8 SDK for its runtime, which the net8.0 tests run on.
+          # Renovate leaves this line alone, see renovate.json.
           dotnet-version: "8.0.x"
       # The version comes from VersionPrefix in PortableText.csproj. The tag must
       # match it, optionally with a prerelease suffix (e.g. 2.0.0 or 2.0.0-beta.1).
