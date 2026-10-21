@@ -182,6 +182,34 @@ namespace PortableText
         }
 
         [Fact]
+        public void GivenMarkDefinitionWithoutType_RendersTextWithoutAnnotation()
+        {
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""Test"",
+                ""marks"": [""linkKey""]
+            }
+        ],
+        ""markDefs"": [
+            {
+                ""_key"": ""linkKey"",
+                ""href"": ""https://sanity.io""
+            }
+        ]
+    }
+]
+";
+
+            var result = PortableTextToHtml.Render(json);
+            result.ShouldBe("<p>Test</p>");
+        }
+
+        [Fact]
         public void GivenMarkedSpan_CallsEachMarkSerializerOnce()
         {
             var annotationCalls = 0;

@@ -219,7 +219,10 @@ public static class PortableTextToHtml
                 {
                     var tags = marks.Select(mark =>
                     {
+                        // A mark definition without _type is not an annotation we can render, so the text is rendered
+                        // without it. The specification does not say what to do with it, and rendering should not fail.
                         if (TryFindMarkDefinition(blockElement, mark, out var markType, out var markDefElement) &&
+                            markType != null &&
                             PtHelpers.SerializerForMarkAnnotationExists(markType, serializers))
                         {
                             var annotatedMarkSerializer =
