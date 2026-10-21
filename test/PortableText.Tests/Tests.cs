@@ -246,6 +246,61 @@ namespace PortableText
             decoratorCalls.ShouldBe(1);
         }
 
+        [Fact]
+        public void GivenBlockWithNumericKey_ShouldNotCrash()
+        {
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""_key"": 123,
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""Test""
+            }
+        ]
+    }
+]
+";
+
+            var result = PortableTextToHtml.Render(json);
+            result.ShouldBe("<p>Test</p>");
+        }
+
+        [Fact]
+        public void GivenMarkDefinitionWithoutKey_ShouldNotCrash()
+        {
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""Test"",
+                ""marks"": [""linkKey""]
+            }
+        ],
+        ""markDefs"": [
+            {
+                ""_type"": ""link"",
+                ""href"": ""https://example.com/without-key""
+            },
+            {
+                ""_type"": ""link"",
+                ""_key"": ""linkKey"",
+                ""href"": ""https://sanity.io""
+            }
+        ]
+    }
+]
+";
+
+            var result = PortableTextToHtml.Render(json);
+            result.ShouldBe(@"<p><a href=""https://sanity.io"">Test</a></p>");
+        }
+
         private class Highlighting
         {
             public string HexColor { get; set; }
