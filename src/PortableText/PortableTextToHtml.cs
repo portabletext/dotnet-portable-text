@@ -30,7 +30,7 @@ public static class PortableTextToHtml
                         }
 
                         using var doc = JsonDocument.Parse(rawValue);
-                        return RenderBlock(doc.RootElement, typedBlock, serializers);
+                        return RenderBlock(doc.RootElement, typedBlock.Style, typedBlock.ListItem, typedBlock.Level, serializers);
                     }
                 }
             }
@@ -133,8 +133,7 @@ public static class PortableTextToHtml
             }
             else
             {
-                var value = currentElement.Deserialize(serializer.Type, JsonSerializerOptions);
-                accumulatedHtml.Add(SerializeElement(currentElement, value, serializers, serializer));
+                accumulatedHtml.Add(SerializeElement(currentElement, serializers, serializer));
             }
         }
 
@@ -148,19 +147,39 @@ public static class PortableTextToHtml
     
     /// <summary>
     /// The built-in block serializer renders directly from the parsed element, instead of receiving the element
-    /// as raw JSON and parsing it again. Other serializers receive the raw JSON as before.
+    /// as raw JSON and parsing it again. Other serializers receive the deserialized value and the raw JSON as before.
     /// </summary>
-    private static string SerializeElement(JsonElement element, object value, PortableTextSerializers serializers, TypeSerializer serializer)
+    private static string SerializeElement(JsonElement element, PortableTextSerializers serializers, TypeSerializer serializer)
     {
-        if (ReferenceEquals(serializer, DefaultBlockTypeSerializer) && value is PortableTextBlock block)
+        if (ReferenceEquals(serializer, DefaultBlockTypeSerializer))
         {
-            return RenderBlock(element, block, serializers);
+            // Read what the block needs directly, instead of deserializing it into a PortableTextBlock
+            return RenderBlock(element, ReadString(element, "style"), ReadString(element, "listItem"), ReadLevel(element), serializers);
         }
 
+        var value = element.Deserialize(serializer.Type, JsonSerializerOptions);
         return serializer.Serialize(value, element.GetRawText(), serializers, false);
     }
 
-    private static string RenderBlock(JsonElement blockElement, PortableTextBlock typedBlock, PortableTextSerializers serializers)
+    /// <summary>
+    /// Reads a string property the way deserializing it would: null when the property is missing or null.
+    /// </summary>
+    private static string ReadString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind != JsonValueKind.Null
+            ? property.GetString()
+            : null;
+    }
+
+    /// <summary>
+    /// Reads the level of a block the way deserializing it into <see cref="PortableTextBlock"/> would: 0 when missing.
+    /// </summary>
+    private static int ReadLevel(JsonElement element)
+    {
+        return element.TryGetProperty("level", out var level) ? level.GetInt32() : default;
+    }
+
+    private static string RenderBlock(JsonElement blockElement, string blockStyle, string listItem, int level, PortableTextSerializers serializers)
     {
         var childrenRaw = blockElement.GetProperty("children");
         var childrenLength = childrenRaw.GetArrayLength();
@@ -200,23 +219,11 @@ public static class PortableTextToHtml
                 {
                     var tags = marks.Select(mark =>
                     {
-                        var markInMarkDef =
-                            typedBlock.MarkDefinitions?.FirstOrDefault(x => x.Key == mark);
-
-                        if (markInMarkDef != null && PtHelpers.SerializerForMarkAnnotationExists(markInMarkDef.Type, serializers))
+                        if (TryFindMarkDefinition(blockElement, mark, out var markType, out var markDefElement) &&
+                            PtHelpers.SerializerForMarkAnnotationExists(markType, serializers))
                         {
                             var annotatedMarkSerializer =
-                                serializers.MarkSerializers.Annotations[markInMarkDef.Type];
-                            JsonElement markDefElement = default;
-                            var markDefs = blockElement.GetProperty("markDefs");
-                            foreach (var markDef in markDefs.EnumerateArray())
-                            {
-                                if (markDef.GetProperty("_key").GetString() == mark)
-                                {
-                                    markDefElement = markDef;
-                                }
-                            }
-
+                                serializers.MarkSerializers.Annotations[markType];
                             var rawMarkDef = markDefElement.GetRawText();
                             var customMark = markDefElement.Deserialize(annotatedMarkSerializer.Type, JsonSerializerOptions);
                             return annotatedMarkSerializer.Serialize(customMark, rawMarkDef);
@@ -240,19 +247,52 @@ public static class PortableTextToHtml
             }
         }
 
-        var style = string.IsNullOrWhiteSpace(typedBlock.Style) ? "normal" : typedBlock.Style;
+        var style = string.IsNullOrWhiteSpace(blockStyle) ? "normal" : blockStyle;
         var serialized = serializers.BlockStyleSerializers[style](accumulatedHtml);
         
         // NOTE: Not the most elegant approach, but ListItemSerializers are kind of inconsistent when
         // NOTE:    using block style serializers - if it's not a normal style, they should use the style,
         // NOTE:    but if it's a normal style, the p-tag is omitted. That is kind of inconsistent, but maybe
         // NOTE:    ideal from a user perspective. You don't necessarily want the p-tags inside your li-s
-        if (style == "normal" && string.IsNullOrWhiteSpace(typedBlock.ListItem) && typedBlock.Level == default)
+        if (style == "normal" && string.IsNullOrWhiteSpace(listItem) && level == default)
         {
             return $"<p>{serialized}</p>";
         }
 
         return serialized;
+    }
+
+    /// <summary>
+    /// Finds the mark definition with the given key in the block's markDefs, the same way as before they were read
+    /// directly: the type comes from the first definition with the key, and the definition itself from the last one.
+    /// </summary>
+    private static bool TryFindMarkDefinition(JsonElement blockElement, string key, out string type, out JsonElement definition)
+    {
+        type = null;
+        definition = default;
+        if (!blockElement.TryGetProperty("markDefs", out var markDefs) || markDefs.ValueKind == JsonValueKind.Null)
+        {
+            return false;
+        }
+
+        var found = false;
+        foreach (var markDef in markDefs.EnumerateArray())
+        {
+            if (!markDef.TryGetProperty("_key", out var keyElement) || keyElement.ValueKind != JsonValueKind.String || !keyElement.ValueEquals(key))
+            {
+                continue;
+            }
+
+            if (!found)
+            {
+                type = ReadString(markDef, "_type");
+                found = true;
+            }
+
+            definition = markDef;
+        }
+
+        return found;
     }
 
     /// <summary>
@@ -282,11 +322,10 @@ public static class PortableTextToHtml
         var listVariant = currentElement.GetProperty("listItem").GetString();
         var level = PtHelpers.GetListLevel(currentElement);
 
-        var listItemValue = currentElement.Deserialize(serializer.Type, JsonSerializerOptions);
         var (startTag, endTag) = PtHelpers.GetListItemSerializer(listVariant, serializers)();
         var listItems = new List<string>
         {
-            SerializeElement(currentElement, listItemValue, serializers, serializer)
+            SerializeElement(currentElement, serializers, serializer)
         };
         
         var siblingIndex = currentIndex + 1;
@@ -326,8 +365,7 @@ public static class PortableTextToHtml
             {
                 currentIndex++;
                 siblingIndex++;
-                var siblingListItemValue = siblingElement.Deserialize(serializer.Type, JsonSerializerOptions);
-                listItems.Add(SerializeElement(siblingElement, siblingListItemValue, serializers, serializer));
+                listItems.Add(SerializeElement(siblingElement, serializers, serializer));
             }
         }
 
