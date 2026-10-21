@@ -21,9 +21,13 @@ Every performance change should come with evidence that it is an improvement. Ma
 then compare it with the commit it is based on:
 
 ```sh
-benchmark/compare.sh HEAD <short-name>   # uncommitted changes in the working tree
-benchmark/compare.sh main <short-name>   # commits on a branch, compared with main
+benchmark/compare.sh HEAD <short-name>          # uncommitted changes in the working tree
+git fetch origin
+benchmark/compare.sh origin/main <short-name>   # commits on a branch, compared with main on GitHub
 ```
+
+Compare with `origin/main`, not `main`. A local `main` branch is only as new as your last pull, so it
+can be missing changes that are already merged, and the comparison then includes those changes too.
 
 There is no stored baseline. The script builds `Base` from the given commit every time,
 because times measured on another machine or at another time are not comparable.

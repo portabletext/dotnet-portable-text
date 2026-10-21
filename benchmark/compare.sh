@@ -15,7 +15,7 @@
 #
 # Examples:
 #   benchmark/compare.sh
-#   benchmark/compare.sh main avoid-reparsing
+#   benchmark/compare.sh origin/main avoid-reparsing
 #   benchmark/compare.sh HEAD article-only -- --filter '*Article*'
 set -euo pipefail
 
