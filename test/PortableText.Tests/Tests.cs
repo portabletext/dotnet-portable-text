@@ -301,6 +301,40 @@ namespace PortableText
             result.ShouldBe(@"<p><a href=""https://sanity.io"">Test</a></p>");
         }
 
+        [Fact]
+        public void GivenMarkDefinitionsWithSameKey_UsesFirstDefinition()
+        {
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""children"": [
+            {
+                ""_type"": ""span"",
+                ""text"": ""Test"",
+                ""marks"": [""linkKey""]
+            }
+        ],
+        ""markDefs"": [
+            {
+                ""_type"": ""link"",
+                ""_key"": ""linkKey"",
+                ""href"": ""https://first.example.com""
+            },
+            {
+                ""_type"": ""link"",
+                ""_key"": ""linkKey"",
+                ""href"": ""https://last.example.com""
+            }
+        ]
+    }
+]
+";
+
+            var result = PortableTextToHtml.Render(json);
+            result.ShouldBe(@"<p><a href=""https://first.example.com"">Test</a></p>");
+        }
+
         private class Highlighting
         {
             public string HexColor { get; set; }

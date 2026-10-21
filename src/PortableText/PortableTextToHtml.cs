@@ -263,9 +263,13 @@ public static class PortableTextToHtml
     }
 
     /// <summary>
-    /// Finds the mark definition with the given key in the block's markDefs, the same way as before they were read
-    /// directly: the type comes from the first definition with the key, and the definition itself from the last one.
+    /// Finds the mark definition with the given key in the block's markDefs.
     /// </summary>
+    /// <remarks>
+    /// We assume that <c>_key</c> is unique, since it identifies the definition. The Portable Text specification does
+    /// not say what to do with duplicate keys, so we use the first definition with the key, for both its type and its
+    /// data, and rendering does not fail.
+    /// </remarks>
     private static bool TryFindMarkDefinition(JsonElement blockElement, string key, out string type, out JsonElement definition)
     {
         type = null;
@@ -275,24 +279,17 @@ public static class PortableTextToHtml
             return false;
         }
 
-        var found = false;
         foreach (var markDef in markDefs.EnumerateArray())
         {
-            if (!markDef.TryGetProperty("_key", out var keyElement) || keyElement.ValueKind != JsonValueKind.String || !keyElement.ValueEquals(key))
-            {
-                continue;
-            }
-
-            if (!found)
+            if (markDef.TryGetProperty("_key", out var keyElement) && keyElement.ValueKind == JsonValueKind.String && keyElement.ValueEquals(key))
             {
                 type = ReadString(markDef, "_type");
-                found = true;
+                definition = markDef;
+                return true;
             }
-
-            definition = markDef;
         }
 
-        return found;
+        return false;
     }
 
     /// <summary>
