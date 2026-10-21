@@ -195,6 +195,14 @@ var result = PortableTextToHtml.Render(
 When this library encounters unknown types, they are ignored and you get no warnings.
 If your type isn't outputted, you are probably missing a serializer for it.
 
+## Invalid values
+
+Values of the wrong type are ignored, and `null` is treated as a missing value:
+
+- A block whose `style` is not a string gets the normal style.
+- A block whose `listItem` is not a string, or whose `level` is not a number, is not a list item.
+- A `level` with decimals is rounded down.
+
 ## License
 
 MIT © [Anders Stensaas](https://github.com/saasen/)

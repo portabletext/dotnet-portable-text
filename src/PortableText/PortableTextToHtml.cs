@@ -153,8 +153,10 @@ public static class PortableTextToHtml
     {
         if (ReferenceEquals(serializer, DefaultBlockTypeSerializer))
         {
-            // Read what the block needs directly, instead of deserializing it into a PortableTextBlock
-            return RenderBlock(element, ReadString(element, "style"), ReadString(element, "listItem"), ReadLevel(element), serializers);
+            // Read what the block needs directly, instead of deserializing it into a PortableTextBlock. A block that
+            // is not a list item, e.g. because its level is not a number, is rendered without its listItem.
+            var listItem = PtHelpers.IsPortableTextElementList(element) ? ReadString(element, "listItem") : null;
+            return RenderBlock(element, ReadString(element, "style"), listItem, ReadLevel(element), serializers);
         }
 
         var value = element.Deserialize(serializer.Type, JsonSerializerOptions);
@@ -162,21 +164,21 @@ public static class PortableTextToHtml
     }
 
     /// <summary>
-    /// Reads a string property the way deserializing it would: null when the property is missing or null.
+    /// Reads a string property: null when the property is missing or not a string.
     /// </summary>
     private static string ReadString(JsonElement element, string propertyName)
     {
-        return element.TryGetProperty(propertyName, out var property) && property.ValueKind != JsonValueKind.Null
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
             ? property.GetString()
             : null;
     }
 
     /// <summary>
-    /// Reads the level of a block the way deserializing it into <see cref="PortableTextBlock"/> would: 0 when missing.
+    /// Reads the level of a block: 0 when the level is missing or not a number.
     /// </summary>
     private static int ReadLevel(JsonElement element)
     {
-        return element.TryGetProperty("level", out var level) ? level.GetInt32() : default;
+        return PtHelpers.TryGetLevel(element, out var level) ? level ?? default : default;
     }
 
     private static string RenderBlock(JsonElement blockElement, string blockStyle, string listItem, int level, PortableTextSerializers serializers)
