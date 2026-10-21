@@ -73,6 +73,26 @@ namespace PortableText
         }
 
         [Fact]
+        public void GivenUnknownBlockStyle_RendersNormalBlock()
+        {
+            const string json = @"
+[
+    {
+        ""_type"": ""block"",
+        ""style"": ""unknown"",
+        ""children"": [
+            { ""_type"": ""span"", ""text"": ""Test"" }
+        ],
+        ""markDefs"": []
+    }
+]
+";
+            var result = PortableTextToHtml.Render(json);
+
+            result.ShouldBe("<p>Test</p>");
+        }
+
+        [Fact]
         public void GivenNoCustomSerializers_AndDecoratorMarksArePresent_ShouldNotCrash()
         {
             const string json = @"
