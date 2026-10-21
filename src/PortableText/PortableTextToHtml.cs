@@ -247,7 +247,10 @@ public static class PortableTextToHtml
             }
         }
 
-        var style = string.IsNullOrWhiteSpace(blockStyle) ? "normal" : blockStyle;
+        // NOTE: The spec does not say how to render a style without a serializer. We render it as the normal style.
+        var style = string.IsNullOrWhiteSpace(blockStyle) || !serializers.BlockStyleSerializers.ContainsKey(blockStyle)
+            ? "normal"
+            : blockStyle;
         var serialized = serializers.BlockStyleSerializers[style](accumulatedHtml);
         
         // NOTE: Not the most elegant approach, but ListItemSerializers are kind of inconsistent when
