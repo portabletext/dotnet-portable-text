@@ -81,6 +81,8 @@ var result = PortableTextToHtml.Render(
 );
 ```
 
+A block whose style has no serializer is rendered as a `normal` block.
+
 ### Marks
 
 This library separates annotation marks and decorator marks.
