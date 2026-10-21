@@ -173,9 +173,10 @@ public static class PortableTextToHtml
         var accumulatedHtml = new List<string>();
         foreach (var child in childrenRaw.EnumerateArray())
         {
-            var childType = child.GetProperty("_type").GetString();
-            if (childType != "span")
+            var typeElement = child.GetProperty("_type");
+            if (!typeElement.ValueEquals("span"))
             {
+                var childType = typeElement.GetString();
                 if (!PtHelpers.SerializerForTypeExists(childType, serializers))
                 {
                     continue;
@@ -188,15 +189,16 @@ public static class PortableTextToHtml
             }
             else
             {
-                var blockChild = child.Deserialize<PortableTextBlockChildSpan>(JsonSerializerOptions);
-                var text = blockChild.Text.PortableTextSerialize();
-                if (blockChild.Marks == null || !blockChild.Marks.Any())
+                // Read the text and marks directly, instead of deserializing the span into a PortableTextBlockChildSpan
+                var text = (child.TryGetProperty("text", out var textElement) ? textElement.GetString() : null).PortableTextSerialize();
+                var marks = ReadMarks(child);
+                if (marks == null || marks.Length == 0)
                 {
                     accumulatedHtml.Add(text);
                 }
                 else
                 {
-                    var tags = blockChild.Marks.Select(mark =>
+                    var tags = marks.Select(mark =>
                     {
                         var markInMarkDef =
                             typedBlock.MarkDefinitions?.FirstOrDefault(x => x.Key == mark);
@@ -251,6 +253,27 @@ public static class PortableTextToHtml
         }
 
         return serialized;
+    }
+
+    /// <summary>
+    /// Reads the marks of a span the way deserializing it into <see cref="PortableTextBlockChildSpan"/> would:
+    /// null when the property is missing or null, otherwise one string per mark.
+    /// </summary>
+    private static string[] ReadMarks(JsonElement span)
+    {
+        if (!span.TryGetProperty("marks", out var marksElement) || marksElement.ValueKind == JsonValueKind.Null)
+        {
+            return null;
+        }
+
+        var marks = new string[marksElement.GetArrayLength()];
+        var i = 0;
+        foreach (var mark in marksElement.EnumerateArray())
+        {
+            marks[i++] = mark.GetString();
+        }
+
+        return marks;
     }
 
     private static string SerializeList(JsonDocument document, JsonElement currentElement, ref int currentIndex, PortableTextSerializers serializers, TypeSerializer serializer)
