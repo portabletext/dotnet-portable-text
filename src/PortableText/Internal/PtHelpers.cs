@@ -44,14 +44,49 @@ internal static class PtHelpers
 
     internal static int GetListLevel(JsonElement listElement)
     {
-        return listElement.TryGetProperty("level", out _)
-            ? listElement.GetProperty("level").GetInt32()
-            : 1;
+        return TryGetLevel(listElement, out var level) ? level ?? 1 : 1;
     }
 
+    // NOTE: The spec does not give a type for listItem and level. We expect a string and a number: a block with
+    // NOTE:    any other listItem or level is not a list item. A null value counts as a missing property.
     internal static bool IsPortableTextElementList(JsonElement currentElement)
     {
-        return currentElement.TryGetProperty("listItem", out _);
+        return currentElement.TryGetProperty("listItem", out var listItem)
+               && listItem.ValueKind == JsonValueKind.String
+               && TryGetLevel(currentElement, out _);
+    }
+
+    /// <summary>
+    /// Reads the level of a block, rounded down. The level is null when it is missing or null, and the method
+    /// returns false when it is not a number that fits in an int.
+    /// </summary>
+    internal static bool TryGetLevel(JsonElement element, out int? level)
+    {
+        level = null;
+        if (!element.TryGetProperty("level", out var levelElement) || levelElement.ValueKind == JsonValueKind.Null)
+        {
+            return true;
+        }
+
+        if (levelElement.ValueKind != JsonValueKind.Number)
+        {
+            return false;
+        }
+
+        if (levelElement.TryGetInt32(out var wholeLevel))
+        {
+            level = wholeLevel;
+            return true;
+        }
+
+        var roundedLevel = Math.Floor(levelElement.GetDouble());
+        if (roundedLevel < int.MinValue || roundedLevel > int.MaxValue)
+        {
+            return false;
+        }
+
+        level = (int)roundedLevel;
+        return true;
     }
     
     internal static bool IsPortableTextElementValid(JsonElement element)
