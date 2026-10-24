@@ -127,6 +127,11 @@ public static class PortableTextToHtml
             }
 
             var serializer = serializers.TypeSerializers[elementType];
+            if (IsBlockWithoutChildren(currentElement, serializer))
+            {
+                continue;
+            }
+
             if (PtHelpers.IsPortableTextElementList(currentElement))
             {
                 accumulatedHtml.Add(SerializeList(document, currentElement, ref i, serializers, serializer));
@@ -145,6 +150,16 @@ public static class PortableTextToHtml
         return string.Join("", accumulatedHtml);
     }
     
+    /// <summary>
+    /// The spec describes children as an array of spans and inline objects. The built-in block serializer ignores a
+    /// block without a children array, like an element of an unknown type.
+    /// </summary>
+    private static bool IsBlockWithoutChildren(JsonElement element, TypeSerializer serializer)
+    {
+        return ReferenceEquals(serializer, DefaultBlockTypeSerializer)
+               && (!element.TryGetProperty("children", out var children) || children.ValueKind != JsonValueKind.Array);
+    }
+
     /// <summary>
     /// The built-in block serializer renders directly from the parsed element, instead of receiving the element
     /// as raw JSON and parsing it again. Other serializers receive the deserialized value and the raw JSON as before.
@@ -194,7 +209,14 @@ public static class PortableTextToHtml
         var accumulatedHtml = new List<string>();
         foreach (var child in childrenRaw.EnumerateArray())
         {
-            var typeElement = child.GetProperty("_type");
+            // The spec says that all children must be typed. A child without a type is ignored, like a child of an
+            // unknown type.
+            if (child.ValueKind != JsonValueKind.Object || !child.TryGetProperty("_type", out var typeElement) ||
+                typeElement.ValueKind != JsonValueKind.String)
+            {
+                continue;
+            }
+
             if (!typeElement.ValueEquals("span"))
             {
                 var childType = typeElement.GetString();
@@ -210,8 +232,14 @@ public static class PortableTextToHtml
             }
             else
             {
+                // A span whose text is not a string is ignored, like a child of an unknown type
+                if (!child.TryGetProperty("text", out var textElement) || textElement.ValueKind != JsonValueKind.String)
+                {
+                    continue;
+                }
+
                 // Read the text and marks directly, instead of deserializing the span into a PortableTextBlockChildSpan
-                var text = (child.TryGetProperty("text", out var textElement) ? textElement.GetString() : null).PortableTextSerialize();
+                var text = textElement.GetString().PortableTextSerialize();
                 var marks = ReadMarks(child);
                 if (marks == null || marks.Length == 0)
                 {
@@ -342,7 +370,7 @@ public static class PortableTextToHtml
             }
             
             var siblingElement = document.RootElement[siblingIndex];
-            if (!PtHelpers.IsPortableTextElementList(siblingElement))
+            if (!PtHelpers.IsPortableTextElementList(siblingElement) || IsBlockWithoutChildren(siblingElement, serializer))
             {
                 break;
             }

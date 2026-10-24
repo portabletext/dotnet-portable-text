@@ -204,6 +204,9 @@ Values of the wrong type are ignored, and `null` is treated as a missing value:
 - A block whose `style` is not a string gets the normal style.
 - A block whose `listItem` is not a string, or whose `level` is not a number, is not a list item.
 - A `level` with decimals is rounded down.
+- A block without a `children` array is ignored, like an unknown type.
+- A child that is not an object, or whose `_type` is not a string, is ignored. The rest of the block is rendered.
+- A span whose `text` is not a string is ignored.
 
 ## License
 
