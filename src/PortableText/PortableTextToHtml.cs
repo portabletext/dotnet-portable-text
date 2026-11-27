@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Collections.Generic;
 using System;
+using System.Web;
 using PortableText.Internal;
 
 namespace PortableText;
@@ -47,8 +48,12 @@ public static class PortableTextToHtml
                         Serialize = (value, rawValue) =>
                         {
                             var typed = value as LinkPortableTextMarkAnnotation;
+                            if (!PtHelpers.UriLooksSafe(typed.Href))
+                            {
+                                return (null, null);
+                            }
 
-                            return ($@"<a href=""{typed.Href}"">", "</a>");
+                            return ($@"<a href=""{HttpUtility.HtmlAttributeEncode(typed.Href)}"">", "</a>");
                         }
                     }
                 }

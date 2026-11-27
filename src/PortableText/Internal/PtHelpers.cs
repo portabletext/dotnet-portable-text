@@ -7,6 +7,40 @@ namespace PortableText.Internal;
 
 internal static class PtHelpers
 {
+    private static readonly string[] AllowedProtocols = ["http", "https", "mailto", "tel"];
+
+    // Port of uriLooksSafe from @portabletext/to-html
+    internal static bool UriLooksSafe(string uri)
+    {
+        var url = (uri ?? string.Empty).Trim();
+
+        if (url.StartsWith('#') || url.StartsWith('/'))
+        {
+            return true;
+        }
+
+        var colonIndex = url.IndexOf(':');
+        if (colonIndex == -1)
+        {
+            return true;
+        }
+
+        var protocol = url.Substring(0, colonIndex).ToLowerInvariant();
+        if (Array.IndexOf(AllowedProtocols, protocol) != -1)
+        {
+            return true;
+        }
+
+        var queryIndex = url.IndexOf('?');
+        if (queryIndex != -1 && colonIndex > queryIndex)
+        {
+            return true;
+        }
+
+        var hashIndex = url.IndexOf('#');
+        return hashIndex != -1 && colonIndex > hashIndex;
+    }
+
     internal static bool SerializerForTypeExists(string type, PortableTextSerializers serializers)
     {
         return serializers.TypeSerializers.TryGetValue(type, out _);
